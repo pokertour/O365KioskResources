@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+@import "starting-point-ui";
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-white);
+        --color-accent-content: var(--color-white);
+        --color-accent-foreground: var(--color-neutral-800);
+    }
+}
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+
+    /*
+     * Flux définit `grid-template-rows`, `grid-template-columns` et `grid-template-areas` séparément.
+     * Lightning CSS peut les fusionner en `grid-template` invalide (un `1fr` isolé entre les lignes de
+     * zones), ce qui casse les zones : le main est alors empilé sous la sidebar. Ne pas définir
+     * `grid-template-rows` ici évite cette fusion tout en restaurant les colonnes et les zones.
+     */
+    body:has(> [data-flux-main]) {
+        display: grid;
+        grid-area: body;
+        min-height: 100dvh;
+        grid-template-columns: min-content minmax(0, 1fr) min-content;
+        grid-template-areas:
+            'header header header'
+            'sidebar main aside'
+            'sidebar footer aside';
+        align-items: start;
+    }
+
+    body:has(> [data-flux-sidebar] + [data-flux-header]) {
+        grid-template-areas:
+            'sidebar header header'
+            'sidebar main aside'
+            'sidebar footer aside';
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply  !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+@layer components {
+    .admin-page {
+        @apply w-full max-w-5xl space-y-8;
+    }
+
+    .admin-page-header {
+        @apply border-b border-zinc-800/90 pb-8;
+    }
+
+    .admin-card {
+        @apply rounded-2xl border border-zinc-800/90 bg-zinc-900/50 p-6 shadow-xl shadow-black/30 ring-1 ring-white/[0.04] backdrop-blur-sm sm:p-8;
+    }
+
+    .admin-card-muted {
+        @apply rounded-2xl border border-zinc-800/60 bg-zinc-950/40 p-5 text-sm text-zinc-400 ring-1 ring-white/[0.03] sm:p-6;
+    }
+
+    .admin-list-divide > * + * {
+        @apply border-t border-zinc-800/80;
+    }
+}
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
