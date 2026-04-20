@@ -60,15 +60,12 @@ Le seeder force `is_admin = true` et l’e-mail vérifié pour ce compte.
 
 ## Configuration Microsoft Azure (Graph API)
 
-L’application appelle Microsoft Graph avec **trois secrets** dans `.env` :
+La configuration Microsoft Graph se fait dans l’interface admin :
 
-| Variable               | Description |
-|------------------------|-------------|
-| `AZURE_TENANT_ID`      | ID du locataire Azure AD (tenant) |
-| `AZURE_CLIENT_ID`      | ID d’application (client) de l’app inscrite sur Azure |
-| `AZURE_CLIENT_SECRET`  | Secret client (ou certificat — ici secret texte) |
+- **Administration** → **Logo & titre** → section **Microsoft 365 (Azure)**
+- champs requis : `Tenant ID`, `Client ID`, `Client secret`
 
-Sans ces valeurs, l’UI admin indique que Microsoft 365 n’est pas configuré ; le reste de l’app (salles, kiosque sans Graph) peut tout de même fonctionner partiellement.
+Le secret est stocké chiffré en base de données. Sans ces valeurs, l’UI admin indique que Microsoft 365 n’est pas configuré ; le reste de l’app peut continuer à fonctionner partiellement.
 
 ### 1. Inscrire une application dans Microsoft Entra ID (Azure AD)
 
@@ -76,13 +73,13 @@ Sans ces valeurs, l’UI admin indique que Microsoft 365 n’est pas configuré 
 2. **Applications** → **App registrations** → **New registration**.
 3. Nom libre (ex. « O365 Kiosk Resources »), comptes pris en charge : **Accounts in this organizational directory only** (single tenant).
 4. Enregistrez. Notez :
-   - **Application (client) ID** → `AZURE_CLIENT_ID`
-   - **Directory (tenant) ID** → `AZURE_TENANT_ID`
+   - **Application (client) ID** → champ `Client ID` dans l’app
+   - **Directory (tenant) ID** → champ `Tenant ID` dans l’app
 
 ### 2. Créer un secret client
 
 1. Dans l’application → **Certificates & secrets** → **New client secret**.
-2. Copiez la **valeur** du secret immédiatement (elle ne réapparaît pas) → `AZURE_CLIENT_SECRET`.
+2. Copiez la **valeur** du secret immédiatement (elle ne réapparaît pas) → champ `Client secret` dans l’app.
 
 ### 3. API Microsoft Graph — permissions **Application** (pas « Delegated »)
 
@@ -96,23 +93,13 @@ Sans ces valeurs, l’UI admin indique que Microsoft 365 n’est pas configuré 
 
 Sans consentement administrateur, les appels token « client credentials » échoueront (403 ou erreurs d’authentification selon les cas).
 
-### 4. Remplir le `.env`
+### 4. Enregistrer les identifiants dans l’application
 
-Exemple :
+1. Ouvrez **Administration** → **Logo & titre**.
+2. Renseignez `Tenant ID`, `Client ID`, `Client secret`.
+3. Enregistrez.
 
-```env
-AZURE_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-AZURE_CLIENT_ID=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
-AZURE_CLIENT_SECRET=~votreSecret~
-```
-
-Puis :
-
-```bash
-php artisan config:clear
-```
-
-Le jeton d’accès Graph est mis en cache côté application (environ 50 minutes). En cas de rotation de secret, un redémarrage ou l’expiration du cache suffit en général.
+Le jeton d’accès Graph est mis en cache côté application (environ 50 minutes). La sauvegarde de cette configuration invalide automatiquement le cache token.
 
 ### 5. Salles côté Microsoft 365
 
@@ -125,8 +112,8 @@ Pour chaque **salle** créée dans l’admin, renseignez l’**e-mail ressource 
 
 | Symptôme | Piste |
 |----------|--------|
-| « Microsoft 365 n’est pas configuré » | Vérifier que les trois variables `AZURE_*` sont non vides et exécuter `php artisan config:clear`. |
-| 401 / invalid_client | Mauvais `AZURE_CLIENT_ID` / secret ou secret expiré. |
+| « Microsoft 365 n’est pas configuré » | Vérifier les champs Microsoft 365 (Azure) dans **Administration > Logo & titre**. |
+| 401 / invalid_client | Mauvais `Client ID` / secret ou secret expiré. |
 | 403 Insufficient privileges | Permission Graph manquante ou **admin consent** non accordé. |
 | 404 sur l’utilisateur / calendrier | L’e-mail ressource n’existe pas dans le tenant ou n’est pas une boîte valide côté Graph. |
 

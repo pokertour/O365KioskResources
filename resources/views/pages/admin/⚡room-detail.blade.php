@@ -40,7 +40,7 @@ new #[Title('Salle')] class extends Component {
 
         if (! $graph->isConfigured()) {
             $this->events = [];
-            $this->graphError = 'Microsoft 365 n’est pas configuré (variables AZURE_*).';
+            $this->graphError = 'Microsoft 365 n’est pas configuré. Renseignez les identifiants dans Administration > Logo & titre.';
 
             return;
         }
@@ -189,9 +189,9 @@ new #[Title('Salle')] class extends Component {
 <div class="admin-page flex flex-col gap-8" wire:poll.120s="refreshCalendar">
     <header class="admin-page-header flex flex-wrap items-start justify-between gap-6">
         <div class="min-w-0">
-            <flux:link :href="route('admin.rooms.index')" class="text-sm text-emerald-400/90 hover:text-emerald-300" wire:navigate>← Salles</flux:link>
-            <flux:heading size="xl" class="mt-2 text-balance text-zinc-50">{{ $room->name }}</flux:heading>
-            <flux:text class="mt-2 text-sm text-zinc-500">{{ $room->slug }} · {{ $room->o365_resource_email }}</flux:text>
+            <flux:link :href="route('admin.rooms.index')" class="text-sm text-emerald-700 hover:text-emerald-600 dark:text-emerald-400/90 dark:hover:text-emerald-300" wire:navigate>← Salles</flux:link>
+            <flux:heading size="xl" class="mt-2 text-balance text-zinc-900 dark:text-zinc-50">{{ $room->name }}</flux:heading>
+            <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-500">{{ $room->slug }} · {{ $room->o365_resource_email }}</flux:text>
         </div>
         <div class="flex flex-shrink-0 flex-wrap gap-2">
             <flux:button variant="ghost" type="button" wire:click="refreshCalendar">Actualiser</flux:button>
@@ -205,29 +205,29 @@ new #[Title('Salle')] class extends Component {
     </header>
 
     @if ($newKioskUrl)
-        <div class="admin-card-muted border-emerald-500/30 bg-emerald-950/20 text-emerald-100">
-            <strong class="block text-sm font-semibold text-emerald-50">Nouvelle URL du kiosque</strong>
-            <code class="mt-3 block break-all rounded-lg bg-black/30 px-3 py-2 font-mono text-xs text-emerald-200/95">{{ $newKioskUrl }}</code>
+        <div class="admin-card-muted border-emerald-500/40 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-950/20 dark:text-emerald-100">
+            <strong class="block text-sm font-semibold text-emerald-900 dark:text-emerald-50">Nouvelle URL du kiosque</strong>
+            <code class="mt-3 block break-all rounded-lg bg-emerald-100 px-3 py-2 font-mono text-xs text-emerald-900 dark:bg-black/30 dark:text-emerald-200/95">{{ $newKioskUrl }}</code>
         </div>
     @endif
 
     @if ($graphError)
-        <div class="admin-card-muted border-amber-500/35 bg-amber-950/25 text-amber-100">
+        <div class="admin-card-muted border-amber-500/45 bg-amber-50 text-amber-900 dark:border-amber-500/35 dark:bg-amber-950/25 dark:text-amber-100">
             {{ $graphError }}
         </div>
     @endif
 
     <div class="admin-card">
-        <flux:heading size="lg" class="mb-4 text-zinc-100">Planning du jour</flux:heading>
+        <flux:heading size="lg" class="mb-4 text-zinc-900 dark:text-zinc-100">Planning du jour</flux:heading>
         @if (count($events) === 0)
-            <flux:text class="text-zinc-500">Aucun événement.</flux:text>
+            <flux:text class="text-zinc-600 dark:text-zinc-500">Aucun événement.</flux:text>
         @else
             <ul class="admin-list-divide -mx-2 flex flex-col">
                 @foreach ($events as $ev)
                     <li class="flex flex-wrap items-center justify-between gap-3 px-2 py-4 first:pt-0 last:pb-0">
                         <div class="min-w-0">
-                            <span class="font-medium text-zinc-100">{{ $ev['subject'] ?: '(Sans titre)' }}</span>
-                            <span class="mt-1 block text-sm text-zinc-500 sm:ms-2 sm:mt-0 sm:inline">
+                            <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $ev['subject'] ?: '(Sans titre)' }}</span>
+                            <span class="mt-1 block text-sm text-zinc-600 dark:text-zinc-500 sm:ms-2 sm:mt-0 sm:inline">
                                 {{ \Carbon\CarbonImmutable::parse($ev['start'])->format('H:i') }}
                                 —
                                 {{ \Carbon\CarbonImmutable::parse($ev['end'])->format('H:i') }}
@@ -248,8 +248,8 @@ new #[Title('Salle')] class extends Component {
     </div>
 
     <div class="admin-card">
-        <flux:heading size="lg" class="mb-2 text-zinc-100">Lien kiosque</flux:heading>
-        <flux:text class="mb-5 max-w-xl text-sm text-zinc-500">
+        <flux:heading size="lg" class="mb-2 text-zinc-900 dark:text-zinc-100">Lien kiosque</flux:heading>
+        <flux:text class="mb-5 max-w-xl text-sm text-zinc-600 dark:text-zinc-500">
             Le token est secret : régénérez-le si une tablette a été compromise.
         </flux:text>
         <flux:button type="button" variant="primary" wire:click="openRegenerateTokenModal">
@@ -276,7 +276,7 @@ new #[Title('Salle')] class extends Component {
 
     <flux:modal name="confirm-delete-room" class="max-w-md">
         <flux:heading size="lg">Supprimer cette salle ?</flux:heading>
-        <flux:text class="mt-2 text-sm text-zinc-500">
+        <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-500">
             La salle, son planning et son lien kiosque seront supprimés définitivement. Cette action est irréversible.
         </flux:text>
         <div class="mt-6 flex flex-wrap justify-end gap-2">
@@ -289,7 +289,7 @@ new #[Title('Salle')] class extends Component {
 
     <flux:modal name="confirm-delete-event" class="max-w-md" wire:close="cancelDeleteEventModal">
         <flux:heading size="lg">Supprimer la réservation ?</flux:heading>
-        <flux:text class="mt-2 text-sm text-zinc-500">
+        <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-500">
             L’événement sera retiré du calendrier Microsoft 365 de cette salle.
         </flux:text>
         <div class="mt-6 flex flex-wrap justify-end gap-2">
@@ -302,7 +302,7 @@ new #[Title('Salle')] class extends Component {
 
     <flux:modal name="confirm-regenerate-token" class="max-w-md">
         <flux:heading size="lg">Régénérer le token kiosque ?</flux:heading>
-        <flux:text class="mt-2 text-sm text-zinc-500">
+        <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-500">
             Les anciennes URL du kiosque cesseront immédiatement de fonctionner. Une nouvelle URL vous sera affichée après confirmation.
         </flux:text>
         <div class="mt-6 flex flex-wrap justify-end gap-2">

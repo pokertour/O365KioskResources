@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\MicrosoftSetting;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
 class MicrosoftGraphService
@@ -13,26 +15,30 @@ class MicrosoftGraphService
 
     private const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
 
+    private ?array $resolvedCredentials = null;
+
     public function isConfigured(): bool
     {
-        return filled(config('services.microsoft.tenant_id'))
-            && filled(config('services.microsoft.client_id'))
-            && filled(config('services.microsoft.client_secret'));
+        $credentials = $this->credentials();
+
+        return filled($credentials['tenant_id'])
+            && filled($credentials['client_id'])
+            && filled($credentials['client_secret']);
     }
 
     public function getAccessToken(): string
     {
         if (! $this->isConfigured()) {
-            throw new RuntimeException('Microsoft Graph is not configured (AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET).');
+            throw new RuntimeException('Microsoft Graph is not configured (tenant id, client id, client secret).');
         }
 
         return Cache::remember(self::TOKEN_CACHE_KEY, now()->addMinutes(50), function (): string {
-            $tenant = config('services.microsoft.tenant_id');
+            $tenant = $this->credentials()['tenant_id'];
             $response = Http::asForm()->post(
                 "https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/token",
                 [
-                    'client_id' => config('services.microsoft.client_id'),
-                    'client_secret' => config('services.microsoft.client_secret'),
+                    'client_id' => $this->credentials()['client_id'],
+                    'client_secret' => $this->credentials()['client_secret'],
                     'scope' => 'https://graph.microsoft.com/.default',
                     'grant_type' => 'client_credentials',
                 ],
@@ -157,5 +163,39 @@ class MicrosoftGraphService
         }
 
         throw new RuntimeException('Microsoft Graph error for '.$resourceEmail.': '.$response->body());
+    }
+
+    /**
+     * @return array{tenant_id: ?string, client_id: ?string, client_secret: ?string}
+     */
+    private function credentials(): array
+    {
+        if ($this->resolvedCredentials !== null) {
+            return $this->resolvedCredentials;
+        }
+
+        if (Schema::hasTable('microsoft_settings')) {
+            $settings = MicrosoftSetting::current();
+            $tenant = trim((string) $settings->tenant_id);
+            $client = trim((string) $settings->client_id);
+            $secret = trim((string) $settings->client_secret);
+
+            // Keep env fallback for transition if DB settings are empty.
+            $this->resolvedCredentials = [
+                'tenant_id' => $tenant !== '' ? $tenant : config('services.microsoft.tenant_id'),
+                'client_id' => $client !== '' ? $client : config('services.microsoft.client_id'),
+                'client_secret' => $secret !== '' ? $secret : config('services.microsoft.client_secret'),
+            ];
+
+            return $this->resolvedCredentials;
+        }
+
+        $this->resolvedCredentials = [
+            'tenant_id' => config('services.microsoft.tenant_id'),
+            'client_id' => config('services.microsoft.client_id'),
+            'client_secret' => config('services.microsoft.client_secret'),
+        ];
+
+        return $this->resolvedCredentials;
     }
 }

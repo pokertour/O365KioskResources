@@ -102,22 +102,22 @@ new #[Title('Salles')] class extends Component {
 
 <div class="admin-page flex flex-col gap-10">
     <header class="admin-page-header">
-        <flux:heading size="xl" class="text-balance text-zinc-50">Salles de réunion</flux:heading>
-        <flux:text class="mt-2 max-w-2xl text-pretty text-sm leading-relaxed text-zinc-400 sm:text-base">
+        <flux:heading size="xl" class="text-balance text-zinc-900 dark:text-zinc-50">Salles de réunion</flux:heading>
+        <flux:text class="mt-2 max-w-2xl text-pretty text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-base">
             Chaque salle correspond à une ressource boîte aux lettres Microsoft 365 (adresse SMTP de la salle).
         </flux:text>
     </header>
 
     @if ($newKioskUrl)
-        <div class="admin-card-muted border-emerald-500/30 bg-emerald-950/20 text-emerald-100">
-            <strong class="block text-sm font-semibold text-emerald-50">URL du kiosque (à conserver)</strong>
-            <code class="mt-3 block break-all rounded-lg bg-black/30 px-3 py-2 font-mono text-xs text-emerald-200/95">{{ $newKioskUrl }}</code>
+        <div class="admin-card-muted border-emerald-500/40 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-950/20 dark:text-emerald-100">
+            <strong class="block text-sm font-semibold text-emerald-900 dark:text-emerald-50">URL du kiosque (à conserver)</strong>
+            <code class="mt-3 block break-all rounded-lg bg-emerald-100 px-3 py-2 font-mono text-xs text-emerald-900 dark:bg-black/30 dark:text-emerald-200/95">{{ $newKioskUrl }}</code>
         </div>
     @endif
 
     <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
         <form wire:submit="createRoom" class="admin-card flex flex-col gap-5">
-            <flux:heading size="lg" class="text-zinc-100">Ajouter une salle</flux:heading>
+            <flux:heading size="lg" class="text-zinc-900 dark:text-zinc-100">Ajouter une salle</flux:heading>
             <div class="space-y-4">
                 <flux:input wire:model="name" label="Nom" required />
                 <flux:input wire:model="slug" label="Identifiant URL (optionnel)" placeholder="ex. salle-a" />
@@ -127,11 +127,11 @@ new #[Title('Salles')] class extends Component {
         </form>
 
         <div class="admin-card flex min-h-[280px] flex-col">
-            <flux:heading size="lg" class="mb-4 text-zinc-100">Salles</flux:heading>
+            <flux:heading size="lg" class="mb-4 text-zinc-900 dark:text-zinc-100">Salles</flux:heading>
             @if ($rooms->isEmpty())
-                <div class="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700/80 bg-zinc-950/40 px-6 py-12 text-center">
-                    <flux:text class="text-zinc-500">Aucune salle pour le moment.</flux:text>
-                    <flux:text class="mt-2 max-w-xs text-sm text-zinc-600">Créez une salle à gauche pour générer le lien kiosque.</flux:text>
+                <div class="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-12 text-center dark:border-zinc-700/80 dark:bg-zinc-950/40">
+                    <flux:text class="text-zinc-600 dark:text-zinc-500">Aucune salle pour le moment.</flux:text>
+                    <flux:text class="mt-2 max-w-xs text-sm text-zinc-500 dark:text-zinc-600">Créez une salle à gauche pour générer le lien kiosque.</flux:text>
                 </div>
             @else
                 <ul class="admin-list-divide -mx-2 flex flex-col">
@@ -140,12 +140,12 @@ new #[Title('Salles')] class extends Component {
                             <div class="min-w-0">
                                 <flux:link
                                     :href="route('admin.rooms.show', $room)"
-                                    class="font-medium text-zinc-100 hover:text-emerald-300"
+                                    class="font-medium text-zinc-900 hover:text-emerald-700 dark:text-zinc-100 dark:hover:text-emerald-300"
                                     wire:navigate
                                 >
                                     {{ $room->name }}
                                 </flux:link>
-                                <div class="mt-0.5 truncate text-xs text-zinc-500">{{ $room->slug }} · {{ $room->o365_resource_email }}</div>
+                                <div class="mt-0.5 truncate text-xs text-zinc-600 dark:text-zinc-500">{{ $room->slug }} · {{ $room->o365_resource_email }}</div>
                             </div>
                             <flux:button
                                 size="sm"
@@ -164,7 +164,7 @@ new #[Title('Salles')] class extends Component {
 
     <flux:modal name="confirm-delete-room" class="max-w-md" wire:close="cancelDeleteRoomModal">
         <flux:heading size="lg">Supprimer cette salle ?</flux:heading>
-        <flux:text class="mt-2 text-sm text-zinc-500">
+        <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-500">
             La salle et son lien kiosque seront supprimés définitivement. Cette action est irréversible.
         </flux:text>
         <div class="mt-6 flex flex-wrap justify-end gap-2">
