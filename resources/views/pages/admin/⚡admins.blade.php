@@ -17,6 +17,8 @@ new #[Title('Administrateurs')] class extends Component {
 
     public string $password_confirmation = '';
 
+    public ?int $userToDeleteId = null;
+
     #[Computed]
     public function users()
     {
@@ -69,6 +71,45 @@ new #[Title('Administrateurs')] class extends Component {
         Flux::toast(variant: 'success', text: 'Administrateur ajouté.');
         unset($this->users);
     }
+
+    public function openDeleteUserModal(int $userId): void
+    {
+        if ($userId === auth()->id()) {
+            Flux::toast(variant: 'danger', text: 'Vous ne pouvez pas supprimer votre propre compte.');
+
+            return;
+        }
+
+        $this->userToDeleteId = $userId;
+        $this->modal('confirm-delete-user')->show();
+    }
+
+    public function cancelDeleteUserModal(): void
+    {
+        $this->userToDeleteId = null;
+    }
+
+    public function confirmDeleteUser(): void
+    {
+        if (! $this->userToDeleteId) {
+            return;
+        }
+
+        $user = User::query()->findOrFail($this->userToDeleteId);
+
+        if ($user->id === auth()->id()) {
+            Flux::toast(variant: 'danger', text: 'Vous ne pouvez pas supprimer votre propre compte.');
+            $this->cancelDeleteUserModal();
+
+            return;
+        }
+
+        $user->delete();
+        $this->modal('confirm-delete-user')->close();
+        $this->cancelDeleteUserModal();
+        Flux::toast(variant: 'success', text: 'Utilisateur supprimé.');
+        unset($this->users);
+    }
 }; ?>
 
 <div class="admin-page flex flex-col gap-10">
@@ -119,10 +160,30 @@ new #[Title('Administrateurs')] class extends Component {
                                     Promouvoir admin
                                 </flux:button>
                             @endif
+                            @if ($user->id === auth()->id())
+                                <flux:button size="sm" variant="danger" type="button" disabled>Supprimer</flux:button>
+                            @else
+                                <flux:button size="sm" variant="danger" type="button" wire:click="openDeleteUserModal({{ $user->id }})">
+                                    Supprimer
+                                </flux:button>
+                            @endif
                         </div>
                     </li>
                 @endforeach
             </ul>
         </div>
     </div>
+
+    <flux:modal name="confirm-delete-user" class="max-w-md" wire:close="cancelDeleteUserModal">
+        <flux:heading size="lg">Supprimer cet utilisateur ?</flux:heading>
+        <flux:text class="mt-2 text-sm text-zinc-500">
+            Cette action est définitive et supprimera l’accès de ce compte.
+        </flux:text>
+        <div class="mt-5 flex justify-end gap-2">
+            <flux:modal.close>
+                <flux:button variant="ghost" type="button">Annuler</flux:button>
+            </flux:modal.close>
+            <flux:button variant="danger" type="button" wire:click="confirmDeleteUser">Supprimer</flux:button>
+        </div>
+    </flux:modal>
 </div>

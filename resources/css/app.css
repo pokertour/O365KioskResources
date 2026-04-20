@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import "starting-point-ui";
+@import '../../vendor/livewire/flux/dist/flux.css';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -69,6 +69,22 @@
             'sidebar header header'
             'sidebar main aside'
             'sidebar footer aside';
+    }
+
+    button:not(:disabled),
+    [type='button']:not(:disabled),
+    [type='submit']:not(:disabled),
+    [type='reset']:not(:disabled),
+    [role='button']:not([aria-disabled='true']) {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [type='button']:disabled,
+    [type='submit']:disabled,
+    [type='reset']:disabled,
+    [role='button'][aria-disabled='true'] {
+        cursor: not-allowed;
     }
 }
 

@@ -10,7 +10,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "devrabiul/laravel-toaster-magic": "*",
         "laravel/fortify": "*",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
