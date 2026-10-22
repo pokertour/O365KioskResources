@@ -15,6 +15,8 @@ Wall screens and tablets, on-site booking, full administration — in English an
 ![Laravel 13](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
 ![Livewire 4](https://img.shields.io/badge/Livewire-4-FB70A9?logo=livewire&logoColor=white)
 
+**[Website](https://pokertour.github.io/O365KioskResources/)** · [Releases](https://github.com/pokertour/O365KioskResources/tags) · [Docker image](https://github.com/pokertour/O365KioskResources/pkgs/container/o365kioskresources)
+
 </div>
 
 <p align="center">
