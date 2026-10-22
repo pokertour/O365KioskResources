@@ -1,6 +1,6 @@
-# Builds the production image and publishes it to GitHub Container Registry
-# when a version tag is pushed, e.g.:  git tag 1.2.0 && git push origin 1.2.0
-name: Release image
+# Builds the production image, publishes it to GitHub Container Registry and creates the
+# matching GitHub release when a version tag is pushed, e.g.:  git tag 1.2.0 && git push origin 1.2.0
+name: Release
 
 on:
   push:
@@ -61,3 +61,52 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  release:
+    name: GitHub release
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Write release notes
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          image="ghcr.io/${REPO,,}"
+          previous=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -vx "$TAG" | head -n1 || true)
+          range=${previous:+$previous..}$TAG
+          {
+            echo "## What's changed"
+            echo
+            git log "$range" --no-merges --pretty='- %s (%h)'
+            echo
+            echo "## Docker image"
+            echo
+            echo '```bash'
+            echo "docker pull $image:$TAG"
+            echo '```'
+            echo
+            echo "Also tagged \`${TAG%.*}\` and \`latest\`."
+            if [ -n "$previous" ]; then
+              echo
+              echo "**Full changelog:** https://github.com/$REPO/compare/$previous...$TAG"
+            fi
+          } > notes.md
+          cat notes.md
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TAG" --notes-file notes.md --latest
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag --latest
+          fi

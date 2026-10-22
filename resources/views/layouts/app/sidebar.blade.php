@@ -66,6 +66,15 @@
                     <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate :class="$navItem">
                         {{ __('Administrators') }}
                     </flux:sidebar.item>
+                    @php
+                        $healthProblems = app(\App\Services\SystemHealth::class)->problemCount();
+                    @endphp
+                    <flux:sidebar.item icon="lifebuoy" :href="route('admin.diagnostics')" :current="request()->routeIs('admin.diagnostics')" wire:navigate :class="$navItem" :badge="$healthProblems ?: null" badge-color="amber">
+                        {{ __('Diagnostics') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="information-circle" :href="route('admin.about')" :current="request()->routeIs('admin.about')" wire:navigate :class="$navItem">
+                        {{ __('About') }}
+                    </flux:sidebar.item>
                 @else
                     <flux:sidebar.item icon="user-circle" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate :class="$navItem">
                         {{ __('My account') }}

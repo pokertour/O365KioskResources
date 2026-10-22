@@ -8,7 +8,7 @@
 Wall screens and tablets, on-site booking, full administration — in English and French.
 
 [![CI](https://github.com/pokertour/O365KioskResources/actions/workflows/ci.yml/badge.svg)](https://github.com/pokertour/O365KioskResources/actions/workflows/ci.yml)
-[![Release image](https://github.com/pokertour/O365KioskResources/actions/workflows/release.yml/badge.svg)](https://github.com/pokertour/O365KioskResources/actions/workflows/release.yml)
+[![Release](https://github.com/pokertour/O365KioskResources/actions/workflows/release.yml/badge.svg)](https://github.com/pokertour/O365KioskResources/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/tag/pokertour/O365KioskResources?label=version&sort=semver)](https://github.com/pokertour/O365KioskResources/tags)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![PHP 8.5](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php&logoColor=white)
@@ -71,6 +71,8 @@ Wall screens and tablets, on-site booking, full administration — in English an
 - **Branding**: name, logo, colours, light or dark theme, with a live preview.
 - **Settings** at global, room and screen level: language, time zone, time format, durations…
 - **Administrator sign-in with Microsoft** (Entra ID SSO).
+- **Diagnostics**: Microsoft 365 connection and permissions, scheduler, queue, disk space, agenda sync — with a report to copy.
+- **⌘K / Ctrl+K palette** to jump to any page, setting or room.
 
 ### 🔒 Security
 
@@ -162,15 +164,17 @@ A room can have several screens. Each one can be renamed, revoked, replaced (new
 | Menu | What's inside |
 |------|---------------|
 | **Rooms** | Live dashboard, Microsoft 365 import, room page (overview, screens, settings, activity) |
-| **Statistics** | Occupancy per room, peak hours, bookings made through the app |
+| **Statistics** | Daily occupancy trend, occupancy per room, peak hours, bookings made through the app |
 | **Announcements** | Banners on all screens or some, schedulable |
-| **Activity** | Full log, filterable by room, origin and type |
+| **Activity** | Timeline grouped by day, filterable by room, origin and type |
 | **Settings › General** | Default language (EN / FR), time zone, 24 h / 12 h format, version |
 | **Settings › Screens** | Refresh rate, text size, "starting soon" warning, timeline or list, working hours, quick booking, end / extend, night mode, QR code |
 | **Settings › Branding** | Name, logo (PNG, JPG, WebP, SVG), colours, screen theme |
 | **Settings › Notifications** | Offline screen alert delay, e-mail to administrators, Teams channel |
 | **Settings › Microsoft 365** | Graph connection, permissions, administrator sign-in with Microsoft |
 | **Settings › Administrators** | Accounts, rights, deletion |
+| **Settings › Diagnostics** | Live Microsoft 365 test, scheduler and queue health, server checks, agenda sync per room, copyable report |
+| **Settings › About** | Version, update check against the latest GitHub release, licence, links |
 
 Screen settings stack up: **screen › room › global settings**.
 
@@ -180,7 +184,7 @@ Screen settings stack up: **screen › room › global settings**.
 
 ### Publish a release
 
-Every `X.X.X` tag triggers [`release.yml`](.github/workflows/release.yml): tests (Pint + Pest), then the image is built and published with the `X.X.X`, `X.X` and `latest` tags.
+Every `X.X.X` tag triggers [`release.yml`](.github/workflows/release.yml): tests (Pint + Pest), then the image is built and published with the `X.X.X`, `X.X` and `latest` tags, and a [GitHub release](https://github.com/pokertour/O365KioskResources/releases) is created with the changelog since the previous tag.
 
 ```bash
 git tag 1.1.0 && git push origin 1.1.0

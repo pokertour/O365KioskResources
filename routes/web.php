@@ -57,6 +57,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         ->middleware('password.confirm')
         ->name('microsoft');
     Route::livewire('settings/users', 'pages::admin.admins')->name('users.index');
+    Route::livewire('settings/diagnostics', 'pages::admin.diagnostics')->name('diagnostics');
+    Route::livewire('settings/about', 'pages::admin.about')->name('about');
 
     // Former URLs.
     Route::redirect('apparence', 'settings/appearance');

@@ -40,6 +40,12 @@ return [
 
     'version' => env('APP_VERSION', 'local-dev'),
 
+    // Source repository (owner/name on GitHub) and project website, shown on the About page,
+    // which also checks the repository for a newer release.
+    'repository' => 'pokertour/O365KioskResources',
+
+    'website' => 'https://pokertour.github.io/O365KioskResources/',
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

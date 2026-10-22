@@ -17,6 +17,8 @@
             ['bell', __('Notifications'), route('admin.notifications'), __('E-mail, Teams')],
             ['cloud', 'Microsoft 365', route('admin.microsoft'), __('Connection, SSO, permissions')],
             ['users', __('Administrators'), route('admin.users.index'), null],
+            ['lifebuoy', __('Diagnostics'), route('admin.diagnostics'), __('Microsoft 365, scheduler, queue, disk')],
+            ['information-circle', __('About'), route('admin.about'), __('Version, updates, licence')],
         ],
         __('Rooms') => \App\Models\Room::query()->orderBy('name')->get(['id', 'name', 'slug', 'location', 'o365_resource_email'])
             ->map(fn ($room) => ['building-office', $room->name, route('admin.rooms.show', $room), $room->location ?: $room->o365_resource_email])
