@@ -1,11 +1,16 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "pokertour/o365-kiosk-resources",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "Microsoft 365 meeting room screens: wall displays and tablets showing room agendas, on-site booking and administration.",
     "keywords": [
         "laravel",
-        "framework"
+        "livewire",
+        "microsoft-365",
+        "microsoft-graph",
+        "meeting-rooms",
+        "kiosk",
+        "room-booking"
     ],
     "license": "MIT",
     "require": {
