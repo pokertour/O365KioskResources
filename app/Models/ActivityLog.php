@@ -68,6 +68,10 @@ class ActivityLog extends Model
             'user.updated' => __('Access changed'),
             'user.deleted' => __('Account deleted'),
             'auth.sso' => __('Signed in with Microsoft'),
+            'signage.created' => __('Wayfinding display created'),
+            'signage.updated' => __('Wayfinding display changed'),
+            'signage.deleted' => __('Wayfinding display deleted'),
+            'signage.link_rotated' => __('Wayfinding display link regenerated'),
             default => $this->action,
         };
     }
@@ -89,6 +93,7 @@ class ActivityLog extends Model
                 'issue' => 'exclamation-triangle',
                 'announcement' => 'megaphone',
                 'room' => 'building-office-2',
+                'signage' => 'map',
                 'user', 'auth' => 'user-circle',
                 default => 'cog-6-tooth',
             },
@@ -102,7 +107,7 @@ class ActivityLog extends Model
     {
         return match (true) {
             in_array($this->action, ['booking.created', 'booking.updated'], true) => 'brand',
-            in_array($this->action, ['meeting.ended', 'screen.online', 'screen.paired', 'issue.resolved', 'room.created', 'user.created'], true) => 'available',
+            in_array($this->action, ['meeting.ended', 'screen.online', 'screen.paired', 'issue.resolved', 'room.created', 'user.created', 'signage.created'], true) => 'available',
             $this->action === 'meeting.extended' => 'soon',
             in_array($this->action, ['screen.offline', 'issue.reported'], true) => 'warning',
             $this->action === 'booking.cancelled' || str_ends_with($this->action, '.deleted') || $this->action === 'screen.removed' => 'busy',

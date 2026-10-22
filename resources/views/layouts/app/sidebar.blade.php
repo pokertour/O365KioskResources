@@ -43,6 +43,9 @@
                     <flux:sidebar.item icon="megaphone" :href="route('admin.announcements')" :current="request()->routeIs('admin.announcements')" wire:navigate :class="$navItem">
                         {{ __('Announcements') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="map" :href="route('admin.signage')" :current="request()->routeIs('admin.signage')" wire:navigate :class="$navItem">
+                        {{ __('Wayfinding') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="clock" :href="route('admin.activity')" :current="request()->routeIs('admin.activity')" wire:navigate :class="$navItem">
                         {{ __('Activity') }}
                     </flux:sidebar.item>

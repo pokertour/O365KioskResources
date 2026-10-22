@@ -8,6 +8,7 @@
             ['building-office-2', __('Rooms'), route('admin.rooms.index'), null],
             ['chart-bar', __('Statistics'), route('admin.stats'), null],
             ['megaphone', __('Announcements'), route('admin.announcements'), null],
+            ['map', __('Wayfinding'), route('admin.signage'), __('Lobby displays with the way to each room')],
             ['clock', __('Activity'), route('admin.activity'), null],
         ],
         __('Settings') => [

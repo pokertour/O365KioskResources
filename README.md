@@ -61,6 +61,14 @@ Wall screens and tablets, on-site booking, full administration — in English an
 - **QR code** to a signed phone view to check the agenda and book.
 - **Several screens per room**, each with its own link, supervision and settings.
 
+### 🧭 Wayfinding displays (optional)
+
+A screen for a lobby or a corridor: several rooms, whether they are free, the meeting in progress or the next one, and an arrow to each room — left, right, ahead, diagonals, upstairs, downstairs or elevator. More rooms than fit? The display turns the pages by itself.
+
+<p align="center">
+  <img src="public/images/screenshots/en/signage.webp" alt="Wayfinding display in a lobby: five rooms with their status and the direction to each one" width="100%" />
+</p>
+
 ### 🛠️ Administration
 
 - **Live dashboard**: status of every room, screens online, open issues.
@@ -73,6 +81,15 @@ Wall screens and tablets, on-site booking, full administration — in English an
 - **Administrator sign-in with Microsoft** (Entra ID SSO).
 - **Diagnostics**: Microsoft 365 connection and permissions, scheduler, queue, disk space, agenda sync — with a report to copy.
 - **⌘K / Ctrl+K palette** to jump to any page, setting or room.
+
+<p align="center">
+  <img src="public/images/screenshots/en/admin-dashboard.webp" alt="Administration dashboard: live status of every room with a strip of the day's meetings" width="100%" />
+</p>
+
+<p align="center">
+  <img src="public/images/screenshots/en/admin-statistics.webp" alt="Statistics: daily occupancy trend, occupancy by room and peak hours" width="49%" />
+  <img src="public/images/screenshots/en/admin-activity.webp" alt="Activity timeline grouped by day" width="49%" />
+</p>
 
 ### 🔒 Security
 
@@ -166,6 +183,7 @@ A room can have several screens. Each one can be renamed, revoked, replaced (new
 | **Rooms** | Live dashboard, Microsoft 365 import, room page (overview, screens, settings, activity) |
 | **Statistics** | Daily occupancy trend, occupancy per room, peak hours, bookings made through the app |
 | **Announcements** | Banners on all screens or some, schedulable |
+| **Wayfinding** | Lobby displays: rooms, order, direction (arrows, stairs, elevator), rooms per page |
 | **Activity** | Timeline grouped by day, filterable by room, origin and type |
 | **Settings › General** | Default language (EN / FR), time zone, 24 h / 12 h format, version |
 | **Settings › Screens** | Refresh rate, text size, "starting soon" warning, timeline or list, working hours, quick booking, end / extend, night mode, QR code |

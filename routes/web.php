@@ -27,6 +27,11 @@ Route::livewire('kiosk/{room}/{token}', 'pages::kiosk.room')
     ->middleware(['throttle:120,1'])
     ->name('kiosk.show');
 
+// Wayfinding display in a lobby: several rooms and the way to them.
+Route::livewire('kiosk/signage/{signboard}/{token}', 'pages::kiosk.signage')
+    ->middleware(['throttle:120,1'])
+    ->name('kiosk.signage');
+
 // Phone view reached by scanning the QR code of a screen: signed, short-lived link.
 Route::livewire('rooms/{room}/mobile', 'pages::mobile.room')
     ->middleware(['signed', 'throttle:60,1'])
@@ -48,6 +53,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::livewire('stats', 'pages::admin.stats')->name('stats');
     Route::livewire('activity', 'pages::admin.activity')->name('activity');
     Route::livewire('announcements', 'pages::admin.announcements')->name('announcements');
+    Route::livewire('signage', 'pages::admin.signage')->name('signage');
 
     Route::livewire('settings/general', 'pages::admin.general')->name('general');
     Route::livewire('settings/screens', 'pages::admin.screens')->name('screens');

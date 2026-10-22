@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AppSetting;
 use App\Models\Room;
 use App\Models\Screen;
+use App\Models\Signboard;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -177,11 +178,20 @@ class SystemHealth
         $online = $screens->filter->isOnline()->count();
         $offline = $screens->count() - $never - $online;
 
-        return [
+        $checks = [
             $this->check(__('Online'), 'ok', (string) $online),
             $this->check(__('Offline'), $offline > 0 ? 'warning' : 'ok', (string) $offline, $offline > 0 ? __('Check the network or the power of these screens.') : null),
             $this->check(__('Never connected'), 'info', (string) $never),
         ];
+
+        $signboards = Signboard::query()->get();
+        if ($signboards->isNotEmpty()) {
+            $down = $signboards->filter(fn (Signboard $s) => $s->seen_at !== null && ! $s->isOnline())->count();
+            $checks[] = $this->check(__('Wayfinding displays'), $down > 0 ? 'warning' : 'ok',
+                __(':online/:total online', ['online' => $signboards->filter->isOnline()->count(), 'total' => $signboards->count()]));
+        }
+
+        return $checks;
     }
 
     private function server(): array

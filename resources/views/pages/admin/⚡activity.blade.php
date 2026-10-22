@@ -38,7 +38,7 @@ new #[Title('Activity')] class extends Component {
             ->with(['room:id,name,slug', 'user:id,name'])
             ->when($this->room !== '', fn ($q) => $q->where('room_id', (int) $this->room))
             ->when(in_array($this->actor, ['screen', 'admin', 'system'], true), fn ($q) => $q->where('actor', $this->actor))
-            ->when(in_array($this->type, ['booking', 'meeting', 'screen', 'issue', 'room', 'announcement', 'settings', 'user', 'auth'], true), fn ($q) => $q->where('action', 'like', $this->type.'.%'))
+            ->when(in_array($this->type, ['booking', 'meeting', 'screen', 'issue', 'room', 'announcement', 'signage', 'settings', 'user', 'auth'], true), fn ($q) => $q->where('action', 'like', $this->type.'.%'))
             ->latest('created_at')
             ->latest('id')
             ->paginate(30);
@@ -69,6 +69,7 @@ new #[Title('Activity')] class extends Component {
             <flux:select.option value="issue">{{ __('Issue reports') }}</flux:select.option>
             <flux:select.option value="room">{{ __('Rooms') }}</flux:select.option>
             <flux:select.option value="announcement">{{ __('Announcements') }}</flux:select.option>
+            <flux:select.option value="signage">{{ __('Wayfinding') }}</flux:select.option>
             <flux:select.option value="settings">{{ __('Settings') }}</flux:select.option>
             <flux:select.option value="user">{{ __('Administrators') }}</flux:select.option>
         </flux:select>
