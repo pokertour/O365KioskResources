@@ -14,14 +14,13 @@ class DatabaseSeeder extends Seeder
         $password = env('ADMIN_PASSWORD', env('ADMIN_SEED_PASSWORD', 'password'));
         $name = env('ADMIN_NAME', env('ADMIN_SEED_NAME', 'Administrateur'));
 
-        User::query()->updateOrCreate(
-            ['email' => $email],
-            [
+        User::query()->firstOrNew(['email' => $email])
+            ->forceFill([
                 'name' => $name,
                 'password' => Hash::make($password),
                 'is_admin' => true,
                 'email_verified_at' => now(),
-            ],
-        );
+            ])
+            ->save();
     }
 }

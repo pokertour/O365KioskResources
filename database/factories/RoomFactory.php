@@ -21,7 +21,6 @@ class RoomFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name).'-'.fake()->unique()->numerify('###'),
             'o365_resource_email' => fake()->unique()->safeEmail(),
-            'kiosk_token_hash' => Room::hashKioskToken(Str::random(48)),
         ];
     }
 }

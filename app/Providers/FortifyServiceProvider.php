@@ -4,11 +4,15 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\AppSetting;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -38,6 +42,19 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        // Same as Fortify's default, except when an admin restricted sign-in to Microsoft (SSO).
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            if (! AppSetting::current()->passwordLoginAllowed()) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => __('Password sign-in is disabled. Use “Sign in with Microsoft”.'),
+                ]);
+            }
+
+            $user = User::query()->where(Fortify::username(), $request->input(Fortify::username()))->first();
+
+            return $user && Hash::check((string) $request->input('password'), $user->password) ? $user : null;
+        });
     }
 
     /**
