@@ -79,7 +79,9 @@ class AppServiceProvider extends ServiceProvider
             : null,
         );
 
-        if (app()->isProduction()) {
+        // Follow APP_URL: a plain-HTTP install (e.g. a local test container) must keep
+        // working, while an HTTPS one never generates http:// links behind a proxy.
+        if (app()->isProduction() && str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
     }
