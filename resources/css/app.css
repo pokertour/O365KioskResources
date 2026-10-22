@@ -9,7 +9,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -23,17 +23,19 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
-}
+    /* Brand palette — overridden at runtime from the admin "Apparence" settings (partials/head). */
+    --color-brand: #2563eb;
+    --color-brand-foreground: #ffffff;
+    --color-available: #16a34a;
+    --color-available-foreground: #ffffff;
+    --color-busy: #dc2626;
+    --color-busy-foreground: #ffffff;
+    --color-soon: #d97706;
+    --color-soon-foreground: #ffffff;
 
-@layer theme {
-    .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
-    }
+    --color-accent: var(--color-brand);
+    --color-accent-content: var(--color-brand);
+    --color-accent-foreground: var(--color-brand-foreground);
 }
 
 @layer base {
@@ -99,39 +101,17 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
-}
-
-@layer components {
-    .admin-page {
-        @apply w-full max-w-5xl space-y-8 text-zinc-900 dark:text-zinc-100;
-    }
-
-    .admin-page-header {
-        @apply border-b border-zinc-200/90 pb-8 dark:border-zinc-800/90;
-    }
-
-    .admin-card {
-        @apply rounded-2xl border border-zinc-200/90 bg-white/95 p-6 shadow-lg shadow-zinc-200/60 ring-1 ring-zinc-100/80 backdrop-blur-sm dark:border-zinc-800/90 dark:bg-zinc-900/50 dark:shadow-black/30 dark:ring-white/[0.04] sm:p-8;
-    }
-
-    .admin-card-muted {
-        @apply rounded-2xl border border-zinc-200/80 bg-zinc-50/90 p-5 text-sm text-zinc-700 ring-1 ring-zinc-100 dark:border-zinc-800/60 dark:bg-zinc-950/40 dark:text-zinc-400 dark:ring-white/[0.03] sm:p-6;
-    }
-
-    .admin-list-divide > * + * {
-        @apply border-t border-zinc-200/90 dark:border-zinc-800/80;
-    }
+    @apply outline-hidden ring-3 ring-brand/25 border-brand;
 }
 
 #nprogress .bar {
-    background: #10b981 !important;
+    background: var(--color-brand) !important;
 }
 
 #nprogress .peg {
-    box-shadow: 0 0 10px #10b981, 0 0 5px #10b981 !important;
+    box-shadow: 0 0 10px var(--color-brand), 0 0 5px var(--color-brand) !important;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+[x-cloak] {
+    display: none !important;
+}

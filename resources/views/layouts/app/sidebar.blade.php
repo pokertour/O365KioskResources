@@ -1,125 +1,76 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ app()->getLocale() }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-dvh bg-zinc-100 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-        {{-- Ordre Flux : header d’abord, puis sidebar, puis main — même grille que le starter (ligne header, puis sidebar | main alignés en haut). --}}
-        <flux:header
-            container
-            class="border-b border-zinc-200/80 bg-white/95 backdrop-blur dark:border-zinc-800/80 dark:bg-zinc-950/95 lg:hidden"
-        >
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
-
-            <flux:spacer />
-
-            <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-                />
-
-                <flux:menu>
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar
-                                    :name="auth()->user()->name"
-                                    :initials="auth()->user()->initials()"
-                                />
-
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
-                                    <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
-                                </div>
-                            </div>
-                        </div>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
-                        <flux:menu.item
-                            as="button"
-                            type="submit"
-                            icon="arrow-right-start-on-rectangle"
-                            class="w-full cursor-pointer"
-                            data-test="logout-button"
-                        >
-                            {{ __('Log out') }}
-                        </flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
-        </flux:header>
+    <body class="min-h-dvh bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+        @php
+            $navItem = 'h-9 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 data-current:bg-white data-current:font-medium data-current:text-zinc-900 data-current:shadow-xs data-current:ring-1 data-current:ring-zinc-200 data-current:[&_svg]:text-brand dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white dark:data-current:bg-white/[0.07] dark:data-current:text-white dark:data-current:ring-white/10';
+            $groupLabel = 'px-2 pb-1 pt-6 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500';
+        @endphp
 
         <flux:sidebar
             sticky
             collapsible="mobile"
-            class="min-h-0 border-e border-zinc-200/90 bg-white !bg-white shadow-[4px_0_24px_-8px_rgba(15,23,42,0.16)] dark:border-zinc-800/90 dark:bg-zinc-950 dark:!bg-zinc-950 dark:shadow-[4px_0_24px_-8px_rgba(0,0,0,0.5)] lg:min-h-dvh"
+            class="border-e border-zinc-200 bg-zinc-50! lg:min-h-dvh dark:border-white/[0.06] dark:bg-zinc-950!"
         >
-            <flux:sidebar.header class="border-b border-zinc-200/80 pb-3 dark:border-zinc-800/80">
-                <x-app-logo
-                    :sidebar="true"
-                    :href="auth()->user()->is_admin ? route('admin.rooms.index') : route('dashboard')"
-                    wire:navigate
-                />
+            <flux:sidebar.header class="pb-2">
+                <x-app-logo :href="route('dashboard')" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
-            <flux:sidebar.nav class="pt-2">
-                <flux:sidebar.group heading="Administration" class="grid gap-0.5">
-                    @if (auth()->user()->is_admin)
-                        <flux:sidebar.item
-                            icon="home"
-                            :href="route('admin.rooms.index')"
-                            :current="request()->routeIs('admin.rooms.*')"
-                            wire:navigate
-                            class="rounded-lg data-current:bg-emerald-500/15 data-current:text-emerald-900 data-current:[&>div>svg]:text-emerald-600 dark:data-current:text-emerald-100 dark:data-current:[&>div>svg]:text-emerald-400"
-                        >
-                            Salles
-                        </flux:sidebar.item>
-                        <flux:sidebar.item
-                            icon="user-group"
-                            :href="route('admin.users.index')"
-                            :current="request()->routeIs('admin.users.*')"
-                            wire:navigate
-                            class="rounded-lg data-current:bg-emerald-500/15 data-current:text-emerald-900 data-current:[&>div>svg]:text-emerald-600 dark:data-current:text-emerald-100 dark:data-current:[&>div>svg]:text-emerald-400"
-                        >
-                            Administrateurs
-                        </flux:sidebar.item>
-                        <flux:sidebar.item
-                            icon="photo"
-                            :href="route('admin.branding')"
-                            :current="request()->routeIs('admin.branding')"
-                            wire:navigate
-                            class="rounded-lg data-current:bg-emerald-500/15 data-current:text-emerald-900 data-current:[&>div>svg]:text-emerald-600 dark:data-current:text-emerald-100 dark:data-current:[&>div>svg]:text-emerald-400"
-                        >
-                            Configuration
-                        </flux:sidebar.item>
-                    @else
-                        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                            {{ __('Dashboard') }}
-                        </flux:sidebar.item>
-                    @endif
-                </flux:sidebar.group>
+            <flux:sidebar.nav class="gap-0.5 pt-2">
+                @if (auth()->user()->is_admin)
+                    <flux:sidebar.item icon="building-office-2" :href="route('admin.rooms.index')" :current="request()->routeIs('admin.rooms.*')" wire:navigate :class="$navItem">
+                        {{ __('Rooms') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="chart-bar" :href="route('admin.stats')" :current="request()->routeIs('admin.stats')" wire:navigate :class="$navItem">
+                        {{ __('Statistics') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="megaphone" :href="route('admin.announcements')" :current="request()->routeIs('admin.announcements')" wire:navigate :class="$navItem">
+                        {{ __('Announcements') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clock" :href="route('admin.activity')" :current="request()->routeIs('admin.activity')" wire:navigate :class="$navItem">
+                        {{ __('Activity') }}
+                    </flux:sidebar.item>
+
+                    <div class="{{ $groupLabel }}">{{ __('Settings') }}</div>
+                    <flux:sidebar.item icon="adjustments-horizontal" :href="route('admin.general')" :current="request()->routeIs('admin.general')" wire:navigate :class="$navItem">
+                        {{ __('General') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="tv" :href="route('admin.screens')" :current="request()->routeIs('admin.screens')" wire:navigate :class="$navItem">
+                        {{ __('Screens') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="swatch" :href="route('admin.branding')" :current="request()->routeIs('admin.branding')" wire:navigate :class="$navItem">
+                        {{ __('Branding') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="bell" :href="route('admin.notifications')" :current="request()->routeIs('admin.notifications')" wire:navigate :class="$navItem">
+                        {{ __('Notifications') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="cloud" :href="route('admin.microsoft')" :current="request()->routeIs('admin.microsoft')" wire:navigate :class="$navItem">
+                        Microsoft 365
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate :class="$navItem">
+                        {{ __('Administrators') }}
+                    </flux:sidebar.item>
+                @else
+                    <flux:sidebar.item icon="user-circle" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate :class="$navItem">
+                        {{ __('My account') }}
+                    </flux:sidebar.item>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />
 
-            <flux:sidebar.nav></flux:sidebar.nav>
-
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
+            <x-desktop-user-menu class="hidden lg:block" />
         </flux:sidebar>
+
+        <flux:header class="border-b border-zinc-200 bg-white/90 backdrop-blur lg:hidden dark:border-white/[0.06] dark:bg-zinc-950/90">
+            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+            <x-app-logo class="ms-2" :href="route('dashboard')" wire:navigate />
+            <flux:spacer />
+            <x-desktop-user-menu compact />
+        </flux:header>
 
         {{ $slot }}
 

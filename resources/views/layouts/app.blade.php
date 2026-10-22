@@ -1,8 +1,6 @@
 <x-layouts::app.sidebar :title="$title ?? null">
-    <flux:main
-        class="relative min-h-dvh bg-gradient-to-b from-zinc-50 via-zinc-100 to-zinc-50 pb-16 pt-4 text-zinc-900 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 dark:text-zinc-100 sm:pt-6"
-    >
-        <div class="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+    <flux:main class="min-h-dvh bg-white! px-0! py-0! lg:my-2 lg:me-2 lg:rounded-2xl lg:border lg:border-zinc-200 lg:shadow-xs dark:bg-zinc-900! dark:lg:border-white/[0.06]">
+        <div class="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:py-10">
             {{ $slot }}
         </div>
     </flux:main>

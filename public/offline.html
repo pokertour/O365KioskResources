@@ -31,7 +31,12 @@
 <body>
     <section class="card">
         <h1>Application hors ligne</h1>
-        <p>La connexion est indisponible. Reconnectez la tablette au réseau puis rechargez la page.</p>
+        <p>La connexion est indisponible. Nouvelle tentative automatique dans quelques secondes…</p>
     </section>
+    <script>
+        // Kiosk screens are unattended: keep retrying until the network comes back.
+        setInterval(() => { if (navigator.onLine) location.reload() }, 20000);
+        window.addEventListener('online', () => location.reload());
+    </script>
 </body>
 </html>

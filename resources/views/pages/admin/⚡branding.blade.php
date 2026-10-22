@@ -1,105 +1,92 @@
 <?php
 
 use App\Models\BrandingSetting;
-use App\Models\MicrosoftSetting;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 use Flux\Flux;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new #[Title('Configuration')] class extends Component {
+new #[Title('Branding')] class extends Component {
     use WithFileUploads;
+
+    public const PRESETS = ['#2563eb', '#4f46e5', '#0f766e', '#0369a1', '#7c3aed', '#be123c', '#c2410c', '#18181b'];
 
     public string $site_name = '';
 
     public $logo = null;
 
-    public string $azure_tenant_id = '';
+    public string $primary_color = '';
 
-    public string $azure_client_id = '';
+    public string $available_color = '';
 
-    public string $azure_client_secret = '';
+    public string $busy_color = '';
 
-    public ?string $saved_azure_tenant_id = null;
+    public string $soon_color = '';
 
-    public ?string $saved_azure_client_id = null;
+    public string $kiosk_theme = 'dark';
 
     public function mount(): void
     {
         $b = BrandingSetting::current();
-        $this->site_name = (string) ($b->site_name ?? '');
-
-        if (Schema::hasTable('microsoft_settings')) {
-            $m = MicrosoftSetting::current();
-            $this->azure_tenant_id = (string) ($m->tenant_id ?? '');
-            $this->azure_client_id = (string) ($m->client_id ?? '');
-            $this->saved_azure_tenant_id = $this->azure_tenant_id !== '' ? $this->azure_tenant_id : null;
-            $this->saved_azure_client_id = $this->azure_client_id !== '' ? $this->azure_client_id : null;
-        }
+        $this->site_name = (string) $b->site_name;
+        $this->primary_color = $b->primary_color;
+        $this->available_color = $b->available_color;
+        $this->busy_color = $b->busy_color;
+        $this->soon_color = $b->soon_color;
+        $this->kiosk_theme = $b->kioskTheme();
     }
 
     public function save(): void
     {
+        $hex = ['required', 'regex:/^#[0-9a-fA-F]{6}$/'];
+
         $this->validate([
-            'site_name' => ['nullable', 'string', 'max:80'],
-            'logo' => ['nullable', 'file', 'max:2048', 'mimes:jpg,jpeg,png,gif,webp,svg'],
+            'site_name' => ['nullable', 'string', 'max:60'],
+            // SVG is accepted: the file is served from a private disk with a sandboxing CSP.
+            'logo' => ['nullable', 'file', 'max:2048', 'mimes:png,jpg,jpeg,webp,svg', 'mimetypes:image/png,image/jpeg,image/webp,image/svg+xml,image/svg'],
+            'primary_color' => $hex,
+            'available_color' => $hex,
+            'busy_color' => $hex,
+            'soon_color' => $hex,
+            'kiosk_theme' => ['required', Rule::in(BrandingSetting::THEMES)],
+        ], [
+            'regex' => __('Invalid colour (#RRGGBB format).'),
+        ], [
+            'site_name' => __('display name'),
+            'logo' => __('logo'),
         ]);
 
         $b = BrandingSetting::current();
-        $trim = trim($this->site_name);
-        $b->site_name = $trim === '' ? null : $trim;
+        $b->fill([
+            'site_name' => trim($this->site_name) ?: null,
+            'primary_color' => strtolower($this->primary_color),
+            'available_color' => strtolower($this->available_color),
+            'busy_color' => strtolower($this->busy_color),
+            'soon_color' => strtolower($this->soon_color),
+            'kiosk_theme' => $this->kiosk_theme,
+        ]);
 
         if ($this->logo) {
-            if ($b->logo_path) {
-                Storage::disk('public')->delete($b->logo_path);
-            }
-            $b->logo_path = $this->logo->store('branding', 'public');
+            $b->deleteStoredLogo();
+            $b->logo_path = $this->logo->store('branding', BrandingSetting::LOGO_DISK);
         }
 
         $b->save();
         $this->logo = null;
 
-        Flux::toast(variant: 'success', text: 'Identité visuelle enregistrée.');
+        \App\Models\ActivityLog::record('settings.updated', null, __('Branding'));
+        Flux::toast(variant: 'success', text: __('Branding saved.'));
+        // Full navigation so the new palette is injected in the page head.
         $this->redirect(route('admin.branding'), navigate: true);
     }
 
-    public function saveMicrosoftConfig(): void
+    public function resetColors(): void
     {
-        if (! Schema::hasTable('microsoft_settings')) {
-            Flux::toast(variant: 'danger', text: 'Migration manquante : exécutez php artisan migrate.');
-
-            return;
-        }
-
-        $this->validate([
-            'azure_tenant_id' => ['required', 'string', 'max:255'],
-            'azure_client_id' => ['required', 'string', 'max:255'],
-            'azure_client_secret' => ['nullable', 'string', 'max:2048'],
-        ], [], [
-            'azure_tenant_id' => 'Tenant ID',
-            'azure_client_id' => 'Client ID',
-            'azure_client_secret' => 'Client secret',
-        ]);
-
-        $m = MicrosoftSetting::current();
-        $m->tenant_id = trim($this->azure_tenant_id);
-        $m->client_id = trim($this->azure_client_id);
-        if (trim($this->azure_client_secret) !== '') {
-            $m->client_secret = trim($this->azure_client_secret);
-        }
-        $m->save();
-
-        // Force token refresh after credentials update.
-        Cache::forget('microsoft_graph.access_token');
-
-        $this->saved_azure_tenant_id = $m->tenant_id !== '' ? $m->tenant_id : null;
-        $this->saved_azure_client_id = $m->client_id !== '' ? $m->client_id : null;
-        $this->azure_client_secret = '';
-        Flux::toast(variant: 'success', text: 'Configuration Microsoft 365 enregistrée.');
-        $this->redirect(route('admin.branding'), navigate: true);
+        $this->primary_color = BrandingSetting::DEFAULTS['primary_color'];
+        $this->available_color = BrandingSetting::DEFAULTS['available_color'];
+        $this->busy_color = BrandingSetting::DEFAULTS['busy_color'];
+        $this->soon_color = BrandingSetting::DEFAULTS['soon_color'];
     }
 
     public function removeLogo(): void
@@ -107,173 +94,203 @@ new #[Title('Configuration')] class extends Component {
         $b = BrandingSetting::current();
         $b->deleteStoredLogo();
         $b->save();
-
-        Flux::toast(variant: 'success', text: 'Logo réinitialisé.');
-        $this->redirect(route('admin.branding'), navigate: true);
-    }
-
-    public function openRemoveLogoModal(): void
-    {
-        $this->modal('confirm-remove-logo')->show();
-    }
-
-    public function confirmRemoveLogo(): void
-    {
         $this->modal('confirm-remove-logo')->close();
-        $this->removeLogo();
+
+        Flux::toast(variant: 'success', text: __('Logo removed.'));
+        $this->redirect(route('admin.branding'), navigate: true);
     }
 }; ?>
 
-<div class="admin-page flex flex-col gap-10">
-    <header class="admin-page-header">
-        <flux:heading size="xl" class="text-balance text-zinc-900 dark:text-zinc-50">Configuration</flux:heading>
-        <flux:text class="mt-2 max-w-2xl text-pretty text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-base">
-            Regroupez ici l’identité visuelle et la configuration Microsoft 365.
-        </flux:text>
-    </header>
+@php
+    $logoPreview = $logo && ! str_contains((string) $logo->getMimeType(), 'svg') ? $logo->temporaryUrl() : $branding->logoUrl();
+@endphp
 
-    <div x-data="{ tab: 'branding' }" class="space-y-6">
-        <div class="inline-flex rounded-xl border border-zinc-300 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900/60">
-            <button
-                type="button"
-                class="rounded-lg px-4 py-2 text-sm font-medium transition"
-                :class="tab === 'branding' ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-100' : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'"
-                x-on:click="tab = 'branding'"
-            >
-                Identité visuelle
-            </button>
-            <button
-                type="button"
-                class="rounded-lg px-4 py-2 text-sm font-medium transition"
-                :class="tab === 'microsoft' ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-100' : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'"
-                x-on:click="tab = 'microsoft'"
-            >
-                Microsoft 365
-            </button>
-        </div>
+<div>
+    <x-admin.page-header :title="__('Branding')" :description="__('Customise the name, logo and colours. They apply to the administration and to every screen.')" />
 
-        <div x-show="tab === 'branding'" x-cloak class="grid gap-8 lg:grid-cols-2">
-            <form wire:submit="save" class="admin-card flex flex-col gap-6">
-                <flux:heading size="lg" class="text-zinc-900 dark:text-zinc-100">Réglages</flux:heading>
+    <form wire:submit="save" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+        <div class="flex flex-col gap-6">
+            <x-admin.card :title="__('Identity')">
+                <div class="space-y-6">
+                    <flux:input wire:model="site_name" :label="__('Display name')" :placeholder="config('app.name')" :description="__('Shown in the menu and at the top of the screens.')" maxlength="60" />
 
-                <flux:input
-                    wire:model="site_name"
-                    label="Titre dans le menu"
-                    placeholder="{{ config('app.name') }}"
-                    description="Laisser vide pour utiliser le nom de l’application (APP_NAME)."
-                />
-
-                <div>
-                    <flux:label>Nouveau logo</flux:label>
-                    <flux:description class="mb-2">Carré ou paysage ; il sera recadré dans un cadre 32×32 px.</flux:description>
-                    <input
-                        type="file"
-                        wire:model="logo"
-                        accept=".jpg,.jpeg,.png,.gif,.webp,.svg,image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
-                        class="block w-full cursor-pointer rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-800 file:me-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-emerald-800 hover:file:bg-emerald-200 dark:border-zinc-700/80 dark:bg-zinc-900/60 dark:text-zinc-200 dark:file:bg-emerald-600/20 dark:file:text-emerald-200 dark:hover:file:bg-emerald-600/30"
-                    />
-                    @error('logo')
-                        <flux:text class="mt-1 text-sm text-red-400">{{ $message }}</flux:text>
-                    @enderror
-                    <div wire:loading wire:target="logo" class="mt-2 text-xs text-zinc-600 dark:text-zinc-500">Téléversement…</div>
-                </div>
-
-                @if ($logo)
-                    @php($ext = strtolower($logo->getClientOriginalExtension()))
-                    <div class="rounded-xl border border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-700/80 dark:bg-zinc-900/50">
-                        <flux:text class="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-600 dark:text-zinc-500">Aperçu</flux:text>
-                        @if ($ext === 'svg')
-                            <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ $logo->getClientOriginalName() }}</flux:text>
-                        @else
-                            <div class="flex size-16 items-center justify-center overflow-hidden rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950">
-                                <img src="{{ $logo->temporaryUrl() }}" alt="" class="max-h-full max-w-full object-contain" />
+                    <div>
+                        <flux:label>Logo</flux:label>
+                        <div class="mt-2 flex items-center gap-4">
+                            <div class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 p-1.5 dark:border-white/10 dark:bg-white/5">
+                                @if ($logoPreview)
+                                    <img src="{{ $logoPreview }}" alt="" class="max-h-full max-w-full object-contain" />
+                                @else
+                                    <flux:icon.photo class="size-6 text-zinc-300 dark:text-zinc-600" />
+                                @endif
                             </div>
-                        @endif
-                    </div>
-                @endif
-
-                <div class="flex flex-wrap gap-3">
-                    <flux:button variant="primary" type="submit">Enregistrer</flux:button>
-                </div>
-            </form>
-
-            <div class="admin-card flex flex-col gap-6">
-                <flux:heading size="lg" class="text-zinc-900 dark:text-zinc-100">Aperçu menu</flux:heading>
-                <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">Rendu approximatif de la zone marque dans la barre latérale.</flux:text>
-
-                <div
-                    class="flex items-center gap-3 rounded-xl border border-zinc-300 bg-white p-4 ring-1 ring-zinc-100 dark:border-zinc-700/80 dark:bg-zinc-950/80 dark:ring-white/5"
-                >
-                    <div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-zinc-300 bg-white ring-1 ring-zinc-100 dark:border-zinc-700/80 dark:bg-zinc-900 dark:ring-white/5">
-                        @if ($branding->logoUrl())
-                            <img src="{{ $branding->logoUrl() }}" alt="" class="size-full object-contain p-0.5" />
-                        @else
-                            <x-app-logo-icon class="size-5 fill-current text-emerald-400" />
-                        @endif
-                    </div>
-                    <div class="min-w-0">
-                        <div class="truncate font-semibold text-zinc-900 dark:text-zinc-100">{{ $branding->displayName() }}</div>
-                        <div class="text-xs text-zinc-600 dark:text-zinc-500">Barre latérale</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 shadow-xs transition hover:bg-zinc-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
+                                    <flux:icon.arrow-up-tray variant="micro" />
+                                    {{ $logoPreview ? __('Replace') : __('Choose a file') }}
+                                    <input type="file" wire:model="logo" accept=".png,.jpg,.jpeg,.webp,.svg" class="sr-only" />
+                                </label>
+                                @if ($branding->logo_path && ! $logo)
+                                    <flux:modal.trigger name="confirm-remove-logo">
+                                        <flux:button size="sm" variant="ghost">{{ __('Remove') }}</flux:button>
+                                    </flux:modal.trigger>
+                                @endif
+                                <span wire:loading wire:target="logo" class="text-xs text-zinc-500">{{ __('Uploading…') }}</span>
+                                @if ($logo)
+                                    <span class="text-xs text-zinc-500">{{ __(':file — save to apply', ['file' => $logo->getClientOriginalName()]) }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        <flux:description class="mt-2">{{ __('PNG, JPG, WebP or SVG, 2 MB max. A logo on a transparent background looks best on the screens.') }}</flux:description>
+                        <flux:error name="logo" />
                     </div>
                 </div>
+            </x-admin.card>
 
-                @if ($branding->logo_path)
-                    <flux:button variant="danger" type="button" wire:click="openRemoveLogoModal">
-                        Retirer le logo
-                    </flux:button>
-                @endif
-            </div>
+            <x-admin.card :title="__('Colours')">
+                <x-slot:headerActions>
+                    <flux:button size="sm" variant="ghost" wire:click="resetColors">{{ __('Reset') }}</flux:button>
+                </x-slot:headerActions>
+
+                <div class="space-y-6">
+                    <div>
+                        <flux:label>{{ __('Primary colour') }}</flux:label>
+                        <flux:description class="mt-1">{{ __('Buttons, links and active items.') }}</flux:description>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            @foreach ($this::PRESETS as $preset)
+                                <button
+                                    type="button"
+                                    x-on:click="$wire.primary_color = @js($preset)"
+                                    class="size-8 rounded-full ring-2 ring-offset-2 ring-offset-white transition hover:scale-110 dark:ring-offset-zinc-900"
+                                    :class="$wire.primary_color.toLowerCase() === @js($preset) ? 'ring-zinc-900 dark:ring-white' : 'ring-transparent'"
+                                    style="background-color: {{ $preset }}"
+                                    aria-label="{{ $preset }}"
+                                ></button>
+                            @endforeach
+                            <span class="mx-1 h-6 w-px bg-zinc-200 dark:bg-white/10"></span>
+                            <label class="relative size-8 cursor-pointer overflow-hidden rounded-full border border-zinc-300 dark:border-white/20" title="{{ __('Custom colour') }}">
+                                <span class="absolute inset-0 bg-[conic-gradient(red,yellow,lime,aqua,blue,magenta,red)]"></span>
+                                <input type="color" wire:model="primary_color" class="absolute inset-0 size-full cursor-pointer opacity-0" />
+                            </label>
+                            <flux:input wire:model="primary_color" size="sm" class="w-28" class:input="font-mono uppercase" maxlength="7" />
+                        </div>
+                        <flux:error name="primary_color" />
+                    </div>
+
+                    <div class="grid gap-6 sm:grid-cols-3">
+                        @foreach ([['available_color', __('Room available')], ['soon_color', __('Starting soon')], ['busy_color', __('Room busy')]] as [$prop, $label])
+                            <div>
+                                <flux:label>{{ $label }}</flux:label>
+                                <div class="mt-2 flex items-center gap-2">
+                                    <label class="relative size-9 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10" x-bind:style="{ backgroundColor: $wire.{{ $prop }} }">
+                                        <input type="color" wire:model="{{ $prop }}" class="absolute inset-0 size-full cursor-pointer opacity-0" />
+                                    </label>
+                                    <flux:input wire:model="{{ $prop }}" size="sm" class:input="font-mono uppercase" maxlength="7" />
+                                </div>
+                                <flux:error :name="$prop" />
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </x-admin.card>
+
+            <x-admin.card :title="__('Room screens')">
+                <div class="space-y-6">
+                    <div>
+                        <flux:label>{{ __('Theme') }}</flux:label>
+                        <div class="mt-2 grid grid-cols-2 gap-3">
+                            @foreach (['dark' => [__('Dark'), __('Recommended for wall-mounted screens.')], 'light' => [__('Light'), __('For very bright rooms.')]] as $value => [$label, $hint])
+                                <label @class([
+                                    'flex cursor-pointer flex-col gap-3 rounded-xl border p-3 transition',
+                                ]) :class="$wire.kiosk_theme === @js($value) ? 'border-brand ring-2 ring-brand/20' : 'border-zinc-200 hover:border-zinc-300 dark:border-white/10 dark:hover:border-white/20'">
+                                    <input type="radio" wire:model="kiosk_theme" value="{{ $value }}" class="sr-only" />
+                                    <span @class(['flex h-14 gap-1.5 rounded-lg p-1.5', 'bg-zinc-950' => $value === 'dark', 'bg-zinc-100 ring-1 ring-zinc-200' => $value === 'light'])>
+                                        <span class="w-1/2 rounded-md" x-bind:style="{ backgroundColor: $wire.available_color }"></span>
+                                        <span @class(['flex-1 rounded-md', 'bg-zinc-800' => $value === 'dark', 'bg-white' => $value === 'light'])></span>
+                                    </span>
+                                    <span>
+                                        <span class="block text-sm font-medium text-zinc-900 dark:text-white">{{ $label }}</span>
+                                        <span class="block text-xs text-zinc-500">{{ $hint }}</span>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </x-admin.card>
         </div>
 
-        <form wire:submit="saveMicrosoftConfig" x-show="tab === 'microsoft'" x-cloak class="admin-card mt-2 flex flex-col gap-6">
-            <div>
-                <flux:heading size="lg" class="text-zinc-900 dark:text-zinc-100">Microsoft 365 (Azure)</flux:heading>
-                <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    Configurez ici les identifiants Microsoft Graph. Le secret n’est pas ré-affiché pour sécurité.
-                </flux:text>
+        {{-- Live preview --}}
+        <div class="lg:sticky lg:top-6 lg:self-start">
+            <div class="mb-3 flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">{{ __('Screen preview') }}</h2>
+                <span class="text-xs text-zinc-500">{{ __('Live') }}</span>
             </div>
-            @if ($saved_azure_tenant_id || $saved_azure_client_id)
-                <div class="rounded-xl border border-zinc-300 bg-zinc-50 p-4 text-sm dark:border-zinc-700 dark:bg-zinc-900/40">
-                    <div class="font-medium text-zinc-900 dark:text-zinc-100">Valeurs actuellement enregistrées</div>
-                    @if ($saved_azure_tenant_id)
-                        <div class="mt-2 text-zinc-700 dark:text-zinc-300">
-                            Tenant ID : <code class="rounded bg-zinc-200 px-1 py-0.5 text-xs dark:bg-zinc-800">{{ $saved_azure_tenant_id }}</code>
-                        </div>
-                    @endif
-                    @if ($saved_azure_client_id)
-                        <div class="mt-2 text-zinc-700 dark:text-zinc-300">
-                            Client ID : <code class="rounded bg-zinc-200 px-1 py-0.5 text-xs dark:bg-zinc-800">{{ $saved_azure_client_id }}</code>
-                        </div>
-                    @endif
-                </div>
-            @endif
-            <div class="grid gap-4 md:grid-cols-2">
-                <flux:input wire:model="azure_tenant_id" label="Tenant ID" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required />
-                <flux:input wire:model="azure_client_id" label="Client ID" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required />
-            </div>
-            <flux:input
-                wire:model="azure_client_secret"
-                type="password"
-                label="Client secret (laisser vide pour conserver l’actuel)"
-                autocomplete="new-password"
-                viewable
-            />
-            <div class="flex flex-wrap gap-3">
-                <flux:button variant="primary" type="submit">Enregistrer la configuration Microsoft 365</flux:button>
-            </div>
-        </form>
-    </div>
 
-    <flux:modal name="confirm-remove-logo" class="max-w-md">
-        <flux:heading size="lg">Retirer le logo personnalisé ?</flux:heading>
-        <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-500">
-            Le logo sera supprimé du stockage ; l’icône par défaut sera utilisée dans le menu.
-        </flux:text>
-        <div class="mt-6 flex flex-wrap justify-end gap-2">
+            <div
+                class="overflow-hidden rounded-2xl border border-zinc-200 shadow-lg dark:border-white/10"
+                x-data="{ step: 0, get state() { return ['free', 'soon', 'busy'][this.step] }, get busy() { return this.state === 'busy' } }"
+                x-init="setInterval(() => step = (step + 1) % 3, 3000)"
+                x-effect="
+                    const hex = ({ free: $wire.available_color, soon: $wire.soon_color, busy: $wire.busy_color })[state] || '#000000';
+                    const [r, g, b] = [1, 3, 5].map(i => { const c = parseInt(hex.substr(i, 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 });
+                    $el.style.setProperty('--preview-fg', 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.36 ? '#0a0a0a' : '#ffffff');
+                "
+            >
+                <div
+                    class="flex aspect-[4/3] flex-col gap-3 p-4 transition-colors"
+                    :class="$wire.kiosk_theme === 'dark' ? 'bg-zinc-950 text-white' : 'bg-zinc-50 text-zinc-900'"
+                >
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            @if ($logoPreview)
+                                <img src="{{ $logoPreview }}" alt="" class="size-5 object-contain" />
+                            @else
+                                <span class="flex size-5 items-center justify-center rounded" x-bind:style="{ backgroundColor: $wire.primary_color }"></span>
+                            @endif
+                            <span class="text-[11px] font-semibold" x-text="$wire.site_name || @js(config('app.name'))"></span>
+                        </div>
+                        <span class="text-sm font-semibold tabular-nums">09:41</span>
+                    </div>
+                    <div class="grid flex-1 grid-cols-[1.15fr_1fr] gap-2">
+                        <div class="flex flex-col rounded-xl p-3 text-(--preview-fg) transition-colors duration-700" x-bind:style="{ backgroundColor: ({ free: $wire.available_color, soon: $wire.soon_color, busy: $wire.busy_color })[state] }">
+                            <span class="text-sm font-semibold leading-tight">{{ __('Horizon room') }}</span>
+                            <span class="mt-1.5 w-fit rounded-full bg-black/15 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider" x-text="({ free: @js(__('Available')), soon: @js(__('Starting soon')), busy: @js(__('Busy')) })[state]"></span>
+                            <span class="mt-auto text-[10px] font-semibold" x-text="({ free: @js(__('Free until :time', ['time' => '10:30'])), soon: @js(trans_choice('Starts in :count minute|Starts in :count minutes', 5)), busy: @js(__('Board meeting')) })[state]"></span>
+                            <div class="mt-1.5 flex gap-1" x-show="! busy">
+                                <span class="h-3 w-6 rounded bg-white/90"></span>
+                                <span class="h-3 w-6 rounded bg-white/90"></span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1.5 rounded-xl p-2.5" :class="$wire.kiosk_theme === 'dark' ? 'bg-zinc-900' : 'bg-white ring-1 ring-zinc-200'">
+                            <span class="text-[9px] font-semibold">{{ __('Today') }}</span>
+                            @foreach (['10:30', '14:00', '16:30'] as $i => $t)
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[8px] tabular-nums opacity-70">{{ $t }}</span>
+                                    <span class="h-4 w-0.5 rounded-full" x-bind:style="{ backgroundColor: {{ $i === 0 ? '$wire.primary_color' : "'rgba(128,128,128,.3)'" }} }"></span>
+                                    <span class="h-1.5 flex-1 rounded-full bg-current opacity-15"></span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex items-center gap-3">
+                <flux:button type="submit" variant="primary" class="flex-1">{{ __('Save') }}</flux:button>
+            </div>
+            <p class="mt-2 text-xs text-zinc-500">{{ __('Open screens update automatically within a minute.') }}</p>
+        </div>
+    </form>
+
+    <flux:modal name="confirm-remove-logo" class="w-full max-w-md">
+        <flux:heading size="lg">{{ __('Remove the logo?') }}</flux:heading>
+        <flux:text class="mt-2">{{ __('The default icon will be used instead.') }}</flux:text>
+        <div class="mt-6 flex justify-end gap-2">
             <flux:modal.close>
-                <flux:button variant="ghost" type="button">Annuler</flux:button>
+                <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
             </flux:modal.close>
-            <flux:button variant="danger" type="button" wire:click="confirmRemoveLogo">Retirer le logo</flux:button>
+            <flux:button variant="danger" wire:click="removeLogo">{{ __('Remove') }}</flux:button>
         </div>
     </flux:modal>
 </div>

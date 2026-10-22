@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ app()->getLocale() }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div class="flex w-full max-w-sm flex-col gap-2">
-                <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
-                    </span>
-                    <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
-                </a>
+    <body class="min-h-dvh bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+        <div aria-hidden="true" class="pointer-events-none fixed inset-x-0 top-0 h-80 bg-linear-to-b from-brand/10 to-transparent"></div>
+
+        <x-locale-switcher class="absolute end-5 top-5 z-10" />
+
+        <div class="relative flex min-h-dvh flex-col items-center justify-center px-5 py-12">
+            <a href="{{ route('home') }}" class="mb-8 flex flex-col items-center gap-3" wire:navigate>
+                <x-brand-mark size="lg" />
+                <span class="text-base font-semibold tracking-tight">{{ $branding->displayName() }}</span>
+            </a>
+
+            <div class="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-7 shadow-sm dark:border-white/[0.08] dark:bg-zinc-900">
                 <div class="flex flex-col gap-6">
                     {{ $slot }}
                 </div>

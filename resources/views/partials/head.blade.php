@@ -1,28 +1,41 @@
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+@if ($kiosk ?? false)
+    {{-- Kiosk: no pinch / double-tap zoom on wall tablets. --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+@else
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+@endif
+<meta name="referrer" content="strict-origin-when-cross-origin" />
 
-<title>
-    {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
-</title>
-
+@php($brandName = $branding?->displayName() ?? config('app.name', 'Laravel'))
 @php($brandLogoUrl = $branding?->logoUrl())
-<meta name="application-name" content="{{ $branding?->displayName() ?? config('app.name', 'Laravel') }}">
+
+<title>{{ filled($title ?? null) ? __($title).' · '.$brandName : $brandName }}</title>
+
+<meta name="application-name" content="{{ $brandName }}">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="{{ $branding?->displayName() ?? config('app.name', 'Laravel') }}">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafa">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a">
+<meta name="apple-mobile-web-app-title" content="{{ $brandName }}">
+<meta name="theme-color" content="{{ $branding?->cssVariables()['--color-brand'] ?? '#2563eb' }}">
 <link rel="manifest" href="/manifest.webmanifest">
 @if ($brandLogoUrl)
     <link rel="icon" href="{{ $brandLogoUrl }}" sizes="any">
     <link rel="apple-touch-icon" href="{{ $brandLogoUrl }}">
 @else
-    <link rel="icon" href="/icons/icon-192.svg" sizes="any">
-    <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+    <link rel="icon" href="{{ $branding?->iconDataUri() ?? '/favicon.svg' }}" type="image/svg+xml">
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 @endif
 
 <link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+<link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
-@fluxAppearance
+
+@if ($branding)
+    <style>:root{ {!! $branding->cssVariablesInline() !!} }</style>
+@endif
+
+@unless ($forceAppearance ?? false)
+    @fluxAppearance
+@endunless
