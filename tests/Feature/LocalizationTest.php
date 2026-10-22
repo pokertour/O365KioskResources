@@ -140,3 +140,17 @@ test('the app version is shown, "local-dev" outside tagged builds', function () 
 
     $this->actingAs(User::factory()->create())->get(route('admin.general'))->assertSee('v1.4.2');
 });
+
+test('the home page shows screenshots in the visitor language', function () {
+    AppSetting::current()->forceFill(['locale' => 'fr'])->save();
+    $this->get(route('home'))->assertOk()->assertSee('images/screenshots/fr/kiosk-landscape.webp');
+
+    $this->post(route('locale.update'), ['locale' => 'en']);
+    $this->get(route('home'))->assertSee('images/screenshots/en/kiosk-landscape.webp');
+
+    foreach (['fr', 'en'] as $locale) {
+        foreach (['kiosk-landscape', 'kiosk-portrait', 'mobile'] as $shot) {
+            expect(public_path("images/screenshots/{$locale}/{$shot}.webp"))->toBeFile();
+        }
+    }
+});

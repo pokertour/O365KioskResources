@@ -1,237 +1,299 @@
+<div align="center">
+
+<img src="public/icons/icon-192.png" alt="" width="88" height="88" />
+
 # O365 Kiosk Resources
 
-Application **Laravel** + **Livewire Flux** pour afficher et gérer le planning des **salles de réunion Microsoft 365** (ressources « boîte aux lettres de salle »). Elle fournit :
+**Le planning de vos salles de réunion Microsoft 365, affiché devant chaque salle.**<br />
+Écrans muraux et tablettes, réservation sur place, administration complète — en français et en anglais.
 
-- un **back-office** (administrateurs) : salles, identité visuelle, liens kiosque sécurisés par token ;
-- une **vue kiosque** par salle (URL avec token) pour consulter le jour et créer des réservations via **Microsoft Graph**.
+[![CI](https://github.com/pokertour/O365KioskResources/actions/workflows/ci.yml/badge.svg)](https://github.com/pokertour/O365KioskResources/actions/workflows/ci.yml)
+[![Release image](https://github.com/pokertour/O365KioskResources/actions/workflows/release.yml/badge.svg)](https://github.com/pokertour/O365KioskResources/actions/workflows/release.yml)
+[![Version](https://img.shields.io/github/v/tag/pokertour/O365KioskResources?label=version&sort=semver)](https://github.com/pokertour/O365KioskResources/tags)
+![PHP 8.5](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php&logoColor=white)
+![Laravel 13](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
+![Livewire 4](https://img.shields.io/badge/Livewire-4-FB70A9?logo=livewire&logoColor=white)
 
-L’intégration calendrier utilise le flux **OAuth2 client credentials** (application déléguée au niveau du locataire), sans connexion utilisateur interactive.
+</div>
+
+<p align="center">
+  <img src="public/images/screenshots/fr/kiosk-landscape.webp" alt="Écran de salle : réunion en cours et frise de la journée" width="100%" />
+</p>
+
+<p align="center">
+  <img src="public/images/screenshots/fr/kiosk-portrait.webp" alt="Tablette en portrait, salle libre" width="46%" />
+  &nbsp;&nbsp;
+  <img src="public/images/screenshots/fr/mobile.webp" alt="Vue téléphone ouverte depuis le QR code" width="22%" />
+</p>
 
 ---
 
-## Prérequis
+## Sommaire
 
-- **PHP 8.3+** avec extensions habituelles Laravel (pdo, mbstring, openssl, etc.)
-- **Composer**
-- **Node.js** + npm (assets Vite / Tailwind / Flux)
-- Une **base de données** (SQLite par défaut dans `.env.example`, ou MySQL/PostgreSQL)
+- [Fonctionnalités](#fonctionnalités)
+- [Démarrage rapide (Docker)](#démarrage-rapide-docker)
+- [Connecter Microsoft 365](#connecter-microsoft-365)
+- [Installer un écran](#installer-un-écran)
+- [Administration](#administration)
+- [Déploiement](#déploiement)
+- [Développement](#développement)
+- [Architecture](#architecture)
+- [Dépannage](#dépannage)
 
 ---
 
-## Installation locale
+## Fonctionnalités
+
+### 📺 Écrans de salle
+
+- **Statut lisible de loin** : *Disponible*, *Bientôt occupée* ou *Occupée*, aux couleurs de votre marque.
+- **Agenda du jour** en **frise** proportionnelle (ligne « maintenant », créneaux libres) ou en **liste**.
+- **Réservation sur place** : boutons 15 / 30 / 60 min, créneau libre réservable d'un toucher, modification et annulation des réservations faites depuis l'écran.
+- **Terminer ou prolonger** la réunion en cours (+15 / +30 min si la salle reste libre).
+- **Adaptatif** : paysage ou portrait, texte dimensionné selon la résolution et la distance de lecture.
+- **Mode nuit** hors heures de travail, anti-marquage OLED, réveil au toucher.
+- **Kiosque robuste** : écran maintenu allumé, plein écran, zoom bloqué, reprise automatique après une coupure.
+- **Annonces** (exercice incendie, travaux…), **équipements** de la salle, **signalement d'un problème**.
+- **QR code** vers une vue téléphone signée pour consulter le planning et réserver.
+- **Plusieurs écrans par salle**, chacun avec son lien, sa supervision et ses réglages.
+
+### 🛠️ Administration
+
+- **Tableau de bord en direct** : statut de chaque salle, écrans en ligne, signalements ouverts.
+- **Import des salles** depuis Microsoft 365, **appairage des écrans par code** à 6 chiffres.
+- **Statistiques d'occupation** (7 / 30 / 90 jours) et heures de pointe.
+- **Journal d'activité** (réservations, écrans, réglages…), conservé 180 jours.
+- **Alertes** par e-mail et/ou **Microsoft Teams** quand un écran ne répond plus ou qu'un problème est signalé.
+- **Apparence** : nom, logo, couleurs, thème clair ou sombre, avec aperçu en direct.
+- **Réglages** généraux, par salle et par écran : langue, fuseau horaire, format d'heure, durées…
+- **Connexion des administrateurs avec Microsoft** (Entra ID, SSO).
+
+### 🔒 Sécurité
+
+- Liens d'écran secrets, stockés hachés et chiffrés, **révocables** écran par écran.
+- Droits administrateur revérifiés à chaque action, mot de passe redemandé pour les réglages Microsoft.
+- En-têtes de sécurité, pages d'écran en `no-referrer` / `no-store` / `noindex`, logo servi avec une CSP de sandbox.
+- Secrets Microsoft et jetons chiffrés en base, double authentification disponible.
+
+---
+
+## Démarrage rapide (Docker)
+
+L'image est publiée sur GitHub Container Registry à chaque version.
 
 ```bash
-composer install
-cp .env.example .env
-php artisan key:generate
+# 1. Générer une clé d'application
+docker run --rm ghcr.io/pokertour/o365kioskresources php artisan key:generate --show
+
+# 2. Lancer l'application (SQLite dans un volume)
+docker run -d --name salles -p 8080:8080 \
+  -e APP_KEY="base64:…" \
+  -e APP_URL="http://localhost:8080" \
+  -e RUN_MIGRATIONS=true \
+  -v salles-storage:/app/storage \
+  ghcr.io/pokertour/o365kioskresources:latest
+
+# 3. Créer le premier administrateur
+docker exec -it -e ADMIN_EMAIL=vous@entreprise.com -e ADMIN_PASSWORD='un-mot-de-passe-solide' salles php artisan db:seed --force
 ```
 
-Configurer la base dans `.env`, puis :
+Ouvrez <http://localhost:8080>, connectez-vous, puis [connectez Microsoft 365](#connecter-microsoft-365).
+Pour la production (HTTPS, worker, planificateur), voir [Déploiement](#déploiement).
 
-```bash
-php artisan migrate
-php artisan db:seed          # crée / met à jour l’admin (voir variables ADMIN_* ci‑dessous)
-npm install
-npm run build                # ou : npm run dev
-php artisan serve
-```
+---
 
-### Logo
+## Connecter Microsoft 365
 
-Le logo est stocké sur le disque privé (`storage/app/private/branding`) et servi par la route `/branding/logo` avec une CSP de sandbox (les SVG ne peuvent pas exécuter de script). Aucun `storage:link` n’est nécessaire. La migration du 22/10/2026 déplace automatiquement un logo existant depuis le disque `public`.
+L'application lit et réserve les calendriers des salles via **Microsoft Graph**, avec sa propre identité (*client credentials*) : aucun compte utilisateur n'est nécessaire sur les écrans.
 
-### Production : sécurité recommandée
+### 1. Inscrire l'application dans Microsoft Entra ID
 
-```dotenv
-APP_ENV=production
-APP_DEBUG=false
-SESSION_ENCRYPT=true
-SESSION_SECURE_COOKIE=true
-```
+1. [Microsoft Entra admin center](https://entra.microsoft.com/) › **Applications** › **App registrations** › **New registration**.
+2. Nom libre, comptes pris en charge : **Accounts in this organizational directory only**.
+3. Notez l'**Application (client) ID** et le **Directory (tenant) ID**.
+4. **Certificates & secrets** › **New client secret** : copiez la **valeur** tout de suite.
 
-L’application ajoute ses en-têtes de sécurité (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, HSTS en HTTPS). Les pages d’écran sont servies en `no-referrer`, `no-store` et `noindex` car leur URL contient le jeton d’accès.
+### 2. Accorder les permissions
 
-### Paramètres & langues
+**API permissions** › **Add a permission** › **Microsoft Graph**, puis **Grant admin consent** :
 
-Menu **Paramètres** de l’administration :
+| Permission | Type | Obligatoire | Usage |
+|------------|------|:-----------:|-------|
+| `Calendars.ReadWrite` | Application | ✅ | Lire et réserver les calendriers des salles |
+| `Place.Read.All` | Application | — | Importer les salles du locataire |
+| `User.Read` | Déléguée | — | Connexion des administrateurs avec Microsoft (présente par défaut) |
 
-| Page | Contenu |
+> 💡 Recommandé : limitez l'accès de l'application aux seules boîtes de salles avec une [stratégie d'accès application](https://learn.microsoft.com/graph/auth-limit-mailbox-access).
+
+### 3. Saisir les identifiants dans l'application
+
+**Paramètres › Microsoft 365** : ID du locataire, ID d'application, secret client, puis **Enregistrer et tester**.
+La carte **Permissions d'API** indique en direct ce qui est accordé ; **Vérifier** prend en compte un consentement donné à l'instant.
+
+### 4. (Facultatif) Connexion des administrateurs avec Microsoft
+
+1. Dans l'inscription d'application › **Authentication**, ajoutez une plateforme **Web** avec l'URI de redirection affichée dans **Paramètres › Microsoft 365** (`https://votre-domaine/auth/microsoft/callback`).
+2. Activez **« Se connecter avec Microsoft »**. Seuls les comptes de la page **Administrateurs** ayant les droits administrateur peuvent se connecter (reconnus par leur adresse e-mail).
+3. Pour bloquer les autres dès Microsoft : **Applications d'entreprise** › l'application › **Propriétés** › **Affectation requise : Oui**, puis affectez vos administrateurs dans **Utilisateurs et groupes**.
+
+Les mots de passe peuvent ensuite être désactivés, uniquement par un administrateur déjà connecté avec Microsoft (pour éviter de se bloquer).
+
+---
+
+## Installer un écran
+
+1. Créez ou importez la salle dans **Salles** (adresse SMTP de la boîte aux lettres de ressource).
+2. Sur la tablette, ouvrez **`https://votre-domaine/kiosk`** : un **code à 6 chiffres** s'affiche.
+3. Dans la fiche de la salle › onglet **Écran** › **Ajouter un écran › Avec un code d'association**, saisissez le code et nommez l'écran.
+4. La tablette bascule toute seule sur la salle. ✨
+
+Une salle peut avoir plusieurs écrans. Chacun peut être renommé, révoqué, remplacé (nouvelle tablette) ou recevoir ses propres réglages (thème, taille du texte, mode nuit).
+
+> **Conseils matériel** : servez l'application en **HTTPS** (nécessaire pour garder l'écran allumé), activez le mode kiosque / accès guidé de la tablette et désactivez sa mise en veille automatique.
+
+---
+
+## Administration
+
+| Menu | Contenu |
 |------|---------|
-| Général | Langue par défaut (FR/EN), fuseau horaire, format d’heure 24 h / 12 h |
-| Écrans | Fréquence d’actualisation, boutons de réservation rapide, durée maximale, affichage de l’organisateur, message de bas d’écran |
-| Apparence | Nom, logo, couleurs, thème des écrans |
-| Microsoft 365 | Identifiants Graph (confirmation du mot de passe) |
-| Administrateurs | Comptes ayant accès à l’administration |
+| **Salles** | Tableau de bord en direct, import Microsoft 365, fiche salle (aperçu, écrans, paramètres, activité) |
+| **Statistiques** | Occupation par salle, heures de pointe, réservations faites via l'app |
+| **Annonces** | Bandeaux affichés sur tous les écrans ou certains, programmables |
+| **Activité** | Journal complet, filtrable par salle, origine et type |
+| **Paramètres › Général** | Langue par défaut (FR / EN), fuseau horaire, format 24 h / 12 h, version |
+| **Paramètres › Écrans** | Rafraîchissement, taille du texte, alerte « bientôt occupée », frise ou liste, heures de travail, réservation rapide, terminer / prolonger, mode nuit, QR code |
+| **Paramètres › Apparence** | Nom, logo (PNG, JPG, WebP, SVG), couleurs, thème des écrans |
+| **Paramètres › Notifications** | Délai d'alerte écran hors ligne, e-mail aux administrateurs, canal Teams |
+| **Paramètres › Microsoft 365** | Connexion Graph, permissions, connexion Microsoft des administrateurs |
+| **Paramètres › Administrateurs** | Comptes, droits, suppression |
 
-Chaque administrateur peut choisir sa langue depuis son menu ; les visiteurs (page de connexion) via le sélecteur FR/EN. Les traductions sont dans `lang/fr.json` et `lang/fr/*.php` (clés en anglais).
-
-### Planificateur (alertes et nettoyage)
-
-La supervision des écrans (alerte quand un écran ne répond plus) et le nettoyage du journal d’activité (180 jours) reposent sur le planificateur Laravel :
-
-```cron
-* * * * * cd /chemin/vers/app && php artisan schedule:run >> /dev/null 2>&1
-```
-
-En local : `php artisan schedule:work`. Les alertes partent par e-mail (config `MAIL_*`) et/ou vers un canal Teams (Paramètres › Notifications).
-
-### Installer un écran
-
-Sur la tablette, ouvrez `/kiosk` : un code à 6 chiffres s’affiche. Dans l’admin, ouvrez la salle › onglet **Écran** › **Saisir un code**. L’écran bascule seul sur la salle. Le lien direct reste disponible dans le même onglet.
-
-Le QR code affiché sur les écrans ouvre une vue téléphone signée (valable 30 min) : les téléphones doivent pouvoir joindre le serveur, et `APP_URL` / les proxys de confiance doivent refléter l’adresse publique.
-
-### Compte administrateur (seed)
-
-Variables optionnelles dans `.env` (voir `.env.example`) :
-
-| Variable          | Description           |
-|-------------------|-----------------------|
-| `ADMIN_NAME`      | Nom affiché           |
-| `ADMIN_EMAIL`     | E-mail de connexion   |
-| `ADMIN_PASSWORD`  | Mot de passe          |
-
-Le seeder force `is_admin = true` et l’e-mail vérifié pour ce compte.
+Les réglages d'écran se superposent : **écran › salle › réglages généraux**.
 
 ---
 
-## Configuration Microsoft Azure (Graph API)
-
-La configuration Microsoft Graph se fait dans l’interface admin :
-
-- **Configuration** → **Microsoft 365** (confirmation du mot de passe demandée)
-- champs requis : `Tenant ID`, `Client ID`, `Client secret`
-
-Le secret est stocké chiffré en base de données. Sans ces valeurs, l’UI admin indique que Microsoft 365 n’est pas configuré ; le reste de l’app peut continuer à fonctionner partiellement.
-
-### 1. Inscrire une application dans Microsoft Entra ID (Azure AD)
-
-1. Connectez-vous au portail **[Microsoft Entra admin center](https://entra.microsoft.com/)** (ou [Azure Portal](https://portal.azure.com/) → **Microsoft Entra ID**).
-2. **Applications** → **App registrations** → **New registration**.
-3. Nom libre (ex. « O365 Kiosk Resources »), comptes pris en charge : **Accounts in this organizational directory only** (single tenant).
-4. Enregistrez. Notez :
-   - **Application (client) ID** → champ `Client ID` dans l’app
-   - **Directory (tenant) ID** → champ `Tenant ID` dans l’app
-
-### 2. Créer un secret client
-
-1. Dans l’application → **Certificates & secrets** → **New client secret**.
-2. Copiez la **valeur** du secret immédiatement (elle ne réapparaît pas) → champ `Client secret` dans l’app.
-
-### 3. API Microsoft Graph — permissions **Application** (pas « Delegated »)
-
-1. **API permissions** → **Add a permission** → **Microsoft Graph** → **Application permissions**.
-2. Ajoutez au minimum :
-   - **`Calendars.ReadWrite`** — lecture et écriture des calendriers accessibles à l’application dans le locataire (création / suppression d’événements pour les boîtes ressources utilisées comme « utilisateur » Graph).
-
-   Le code appelle des URL du type `https://graph.microsoft.com/v1.0/users/{adresseSMTP}/calendar/...` où `{adresseSMTP}` est l’**e-mail de la ressource salle** (boîte aux lettres de salle) saisi dans l’admin.
-
-   - *(facultatif)* **`Place.Read.All`** — pour le bouton **Importer depuis Microsoft 365** de la page Salles.
-
-3. **Grant admin consent for {votre organisation}** sur les permissions ajoutées (obligatoire pour les droits *Application*).
-
-Sans consentement administrateur, les appels token « client credentials » échoueront (403 ou erreurs d’authentification selon les cas).
-
-### 4. Enregistrer les identifiants dans l’application
-
-1. Ouvrez **Configuration** → **Microsoft 365**.
-2. Renseignez l’ID du locataire, l’ID d’application et le secret client.
-3. Cliquez sur **Enregistrer et tester** : un jeton est demandé immédiatement pour valider la configuration.
-
-Le jeton d’accès Graph est mis en cache côté application (environ 50 minutes). La sauvegarde de cette configuration invalide automatiquement le cache token.
-
-### Connexion des administrateurs avec Microsoft (SSO)
-
-Dans l’inscription d’application › **Authentication**, ajoutez une plateforme **Web** avec l’URI de redirection affichée dans **Paramètres › Microsoft 365** (`https://votre-domaine/auth/microsoft/callback`). La permission déléguée `User.Read` (présente par défaut) suffit. Activez ensuite « Se connecter avec Microsoft » : seuls les comptes existants (même adresse e-mail) peuvent se connecter. Les mots de passe ne peuvent être désactivés qu’après une première connexion Microsoft réussie.
-
-### 5. Salles côté Microsoft 365
-
-Pour chaque **salle** créée dans l’admin, renseignez l’**e-mail ressource Microsoft 365** (adresse SMTP de la boîte aux lettres de salle). Cette adresse doit :
-
-- exister dans le **même locataire** que l’application Entra ID ;
-- être une boîte ressource / salle dont le calendrier est exposé à Graph comme pour un utilisateur (`/users/{email}/...`).
-
-### Dépannage rapide
-
-| Symptôme | Piste |
-|----------|--------|
-| « Microsoft 365 n’est pas configuré » | Vérifier la page **Configuration > Microsoft 365**. |
-| 401 / invalid_client | Mauvais `Client ID` / secret ou secret expiré. |
-| 403 Insufficient privileges | Permission Graph manquante ou **admin consent** non accordé. |
-| 404 sur l’utilisateur / calendrier | L’e-mail ressource n’existe pas dans le tenant ou n’est pas une boîte valide côté Graph. |
-
-Documentation Microsoft : [Microsoft Graph permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference), [Get access without a user](https://learn.microsoft.com/en-us/graph/auth-v2-service-principal).
-
----
-
-## Déploiement (Docker)
+## Déploiement
 
 ### Publier une version
 
-Une image est construite et publiée sur GitHub Container Registry à chaque **tag de version** `X.X.X` :
+Chaque tag `X.X.X` déclenche [`release.yml`](.github/workflows/release.yml) : tests (Pint + Pest), puis build et publication de l'image avec les tags `X.X.X`, `X.X` et `latest`.
 
 ```bash
-git tag 1.0.0
-git push origin 1.0.0
+git tag 1.1.0 && git push origin 1.1.0
 ```
 
-Le workflow `.github/workflows/release.yml` lance d’abord les tests (Pint + Pest), puis publie `ghcr.io/pokertour/o365kioskresources` avec les tags `1.0.0`, `1.0` et `latest`. La version est affichée dans l’administration (bas du menu, Paramètres › Général, `php artisan about`) ; une copie locale affiche `local-dev`.
+La version est affichée dans l'administration et sur la page d'accueil (`local-dev` hors image publiée).
 
-> Au premier push, le paquet GHCR est privé : rendez-le public ou connectez le serveur à GHCR (`docker login ghcr.io`) depuis les paramètres du paquet sur GitHub.
+> Au premier push, le paquet GHCR est privé : rendez-le public, ou authentifiez le serveur (`docker login ghcr.io`).
 
-### L’image
+### L'image
 
-Basée sur **FrankenPHP (PHP 8.5)**, utilisateur non-root, port **8080**, healthcheck sur `/up`. Une seule image, trois rôles (argument de commande) :
+**FrankenPHP · PHP 8.5**, utilisateur non-root, port **8080**, healthcheck sur `/up`. Une seule image, trois rôles :
 
-| Rôle | Commande | Rôle |
-|------|----------|------|
-| `app` (défaut) | `frankenphp run` | Serveur web |
-| `worker` | `php artisan queue:work` | Envoi des notifications (e-mail, Teams) |
-| `scheduler` | `php artisan schedule:work` | Alertes écrans hors ligne, nettoyage |
+| Rôle | Processus | Utilité |
+|------|-----------|---------|
+| `app` *(défaut)* | `frankenphp run` | Serveur web |
+| `worker` | `queue:work` | Envoi des alertes (e-mail, Teams) |
+| `scheduler` | `schedule:work` | Détection des écrans hors ligne, nettoyage |
 
-Au démarrage : création des dossiers de `storage`, `php artisan optimize`, et migrations si `RUN_MIGRATIONS=true` (rôle `app` uniquement).
+[`compose.example.yaml`](compose.example.yaml) décrit les trois services avec un volume partagé. Placez un reverse proxy HTTPS devant le port 8080, ou donnez un domaine à `SERVER_NAME` pour que FrankenPHP gère lui-même le certificat.
 
-Variables principales :
+### Variables d'environnement
 
 | Variable | Description |
 |----------|-------------|
-| `APP_KEY` | **Obligatoire.** `docker run --rm ghcr.io/pokertour/o365kioskresources php artisan key:generate --show` |
-| `APP_URL` | URL publique (`https://salles.example.com`) |
-| `TRUSTED_PROXIES` | `*` ou IP/CIDR du reverse proxy (nécessaire pour HTTPS et les QR codes) |
+| `APP_KEY` | **Obligatoire.** Clé de chiffrement (`php artisan key:generate --show`) |
+| `APP_URL` | URL publique, ex. `https://salles.example.com` |
+| `TRUSTED_PROXIES` | `*` ou IP/CIDR du reverse proxy — nécessaire derrière un proxy (HTTPS, QR codes signés) |
 | `RUN_MIGRATIONS` | `true` pour migrer au démarrage du conteneur `app` |
-| `DB_*` | SQLite par défaut dans le volume (`/app/storage/database.sqlite`) ; MySQL/PostgreSQL supportés |
-| `MAIL_*` | Serveur d’envoi des alertes |
-| `SERVER_NAME` | `:8080` par défaut (HTTP derrière un proxy) ; mettre un domaine pour que FrankenPHP gère lui-même le HTTPS |
+| `DB_*` | SQLite par défaut (`/app/storage/database.sqlite`) ; MySQL / PostgreSQL supportés |
+| `MAIL_*` | Serveur d'envoi des alertes |
+| `SERVER_NAME` | `:8080` par défaut ; un nom de domaine active le HTTPS automatique |
+| `SESSION_SECURE_COOKIE` | `true` en HTTPS |
 
-Le volume **`/app/storage`** contient la base SQLite, le logo et les sessions : à sauvegarder.
+💾 Le volume **`/app/storage`** contient la base SQLite, le logo et les sessions : **à sauvegarder**.
 
-### Docker Compose
+### Sans Docker
 
-Voir [`compose.example.yaml`](compose.example.yaml) (app + worker + scheduler, volume partagé). Placez un reverse proxy HTTPS devant le port 8080 : le HTTPS est requis pour que les tablettes restent allumées (Wake Lock).
-
-Construire l’image localement :
+PHP 8.5 (intl, pdo, zip, pcntl), un serveur web pointant sur `public/`, puis :
 
 ```bash
-docker build --build-arg APP_VERSION=1.0.0 -t o365-kiosk .
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan migrate --force && php artisan optimize
 ```
+
+Ajoutez un worker (`php artisan queue:work`) et le planificateur (`* * * * * php artisan schedule:run`).
 
 ---
 
 ## Développement
 
-```bash
-php artisan test
-vendor/bin/pint
-```
-
-Frontend :
+**Prérequis** : PHP 8.5, Composer, Node.js 22.
 
 ```bash
-npm run dev
+composer setup                 # dépendances, .env, clé, migrations, build
+php artisan db:seed            # admin depuis ADMIN_NAME / ADMIN_EMAIL / ADMIN_PASSWORD
+composer dev                   # serveur + worker + Vite (http://localhost:8000)
 ```
+
+| Commande | Rôle |
+|----------|------|
+| `php artisan test` | Suite de tests (Pest) |
+| `vendor/bin/pint` | Formatage du code |
+| `php artisan schedule:work` | Planificateur en local (alertes écrans) |
+| `php artisan screens:check-offline` | Vérifier les écrans hors ligne manuellement |
+
+La CI ([`ci.yml`](.github/workflows/ci.yml)) lance Pint et les tests à chaque push sur `main` et sur les pull requests.
+
+**Traductions** : les clés sont en anglais dans le code (`__('Rooms')`) ; le français est dans [`lang/fr.json`](lang/fr.json) et `lang/fr/*.php`.
+
+---
+
+## Architecture
+
+| Couche | Technologie |
+|--------|-------------|
+| Back-end | Laravel 13, Livewire 4 (composants mono-fichier), Fortify |
+| Interface | Flux UI, Tailwind CSS 4, Alpine.js |
+| Calendriers | Microsoft Graph (client credentials) |
+| Runtime | FrankenPHP 8.5 |
+
+```
+app/
+├── Models/            Room, Screen, AppSetting, BrandingSetting, Announcement, IssueReport, ActivityLog…
+├── Services/          MicrosoftGraphService (Graph), RoomSchedule (planning, réservations, statut), RoomStats
+├── Http/Controllers/  Logo, langue, connexion Microsoft
+└── Console/Commands/  screens:check-offline
+resources/views/
+├── pages/kiosk/       Écran de salle, appairage
+├── pages/admin/       Administration
+├── pages/mobile/      Vue téléphone (QR code)
+└── components/kiosk/  Frise, liste, horloge…
+```
+
+Le planning de chaque salle est mis en cache 20 s (partagé entre tous ses écrans), avec repli sur la dernière version connue si Graph est indisponible, et rejoue les modifications faites depuis l'app tant que Graph ne les reflète pas encore.
+
+---
+
+## Dépannage
+
+| Symptôme | Piste |
+|----------|-------|
+| « Microsoft 365 n'est pas configuré » | Renseigner **Paramètres › Microsoft 365**. |
+| `invalid_client` / 401 | ID d'application ou secret erroné, ou secret expiré. |
+| 403 / *Insufficient privileges* | Permission manquante ou consentement non accordé — voir la carte **Permissions d'API**, puis **Vérifier**. |
+| 404 sur une salle | L'adresse n'est pas une boîte de salle du même locataire. |
+| Import des salles refusé | Ajouter `Place.Read.All` (Application) + consentement. |
+| L'écran ne reste pas allumé | Servir l'application en **HTTPS** et désactiver la veille de la tablette. |
+| QR code : « lien invalide » | Derrière un proxy, définir `APP_URL` et `TRUSTED_PROXIES`. |
+| Pas d'alerte « écran hors ligne » | Le **planificateur** et le **worker** doivent tourner ; vérifier `MAIL_*` / le webhook Teams (**Envoyer un test**). |
+| « Ce lien d'écran n'est plus valide » | L'écran a été retiré ou son lien régénéré : réassocier la tablette via `/kiosk`. |
+
+Documentation Microsoft : [permissions Graph](https://learn.microsoft.com/graph/permissions-reference) · [accès sans utilisateur](https://learn.microsoft.com/graph/auth-v2-service-principal).
 
 ---
 
 ## Licence
 
-Projet dérivé des conventions Laravel / Livewire Starter Kit ; licence MIT sauf mention contraire des dépendances.
+MIT — voir [`composer.json`](composer.json).
