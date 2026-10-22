@@ -1,0 +1,60 @@
+# Builds the project website (site/) and publishes it to GitHub Pages.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'public/images/screenshots/en/**'
+      - 'public/favicon.svg'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    # GitHub Pages needs a public repository (on the free plan): skip until then.
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/images
+          cp site/index.html _site/
+          cp public/images/screenshots/en/*.webp _site/images/
+          cp public/favicon.svg _site/favicon.svg
+          cp public/favicon.svg _site/icon.svg
+          npx --yes @tailwindcss/cli@4 -i site/app.css -o _site/app.css --minify
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>O365 Kiosk Resources — Microsoft 365 meeting room screens</title>
+    <meta name="description" content="Open-source wall screens and tablets showing each Microsoft 365 meeting room's live agenda, with on-site booking, multi-screen supervision and a full admin panel." />
+    <meta name="theme-color" content="#2563eb" />
+    <meta property="og:title" content="O365 Kiosk Resources" />
+    <meta property="og:description" content="Microsoft 365 meeting room screens: live agenda, on-site booking, supervision. Open source, self-hosted." />
+    <meta property="og:image" content="images/kiosk-landscape.webp" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+</head>
+<body class="overflow-x-clip bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-[44rem] bg-linear-to-b from-brand/12 to-transparent"></div>
+
+    <!-- Navigation -->
+    <header class="sticky top-0 z-30 border-b border-transparent bg-zinc-50/80 backdrop-blur-md dark:bg-zinc-950/80">
+        <nav class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
+            <a href="#" class="flex items-center gap-3">
+                <img src="icon.svg" alt="" width="32" height="32" class="size-8" />
+                <span class="font-semibold tracking-tight">O365 Kiosk Resources</span>
+            </a>
+            <div class="flex items-center gap-1 text-sm sm:gap-2">
+                <a href="#features" class="hidden rounded-lg px-3 py-2 text-zinc-600 hover:text-zinc-900 sm:inline dark:text-zinc-400 dark:hover:text-white">Features</a>
+                <a href="#get-started" class="hidden rounded-lg px-3 py-2 text-zinc-600 hover:text-zinc-900 sm:inline dark:text-zinc-400 dark:hover:text-white">Get started</a>
+                <a href="https://github.com/pokertour/O365KioskResources" class="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-3.5 py-2 font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    <svg viewBox="0 0 16 16" class="size-4" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    GitHub
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="relative">
+        <!-- Hero -->
+        <section class="mx-auto max-w-6xl px-5 pt-16 pb-12 text-center sm:px-8 sm:pt-24">
+            <a href="https://github.com/pokertour/O365KioskResources/releases" class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 shadow-xs dark:border-white/10 dark:bg-white/5 dark:text-zinc-300">
+                <span class="size-1.5 rounded-full bg-available"></span> Open source · Self-hosted · MIT
+            </a>
+            <h1 class="mx-auto mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+                Every meeting room's availability, <span class="text-brand">at a glance.</span>
+            </h1>
+            <p class="mx-auto mt-6 max-w-2xl text-lg text-pretty text-zinc-600 dark:text-zinc-400">
+                Wall screens and tablets in front of your rooms show the day's agenda live from Microsoft 365 — and let people book, extend or free a room on the spot.
+            </p>
+            <div class="mt-9 flex flex-wrap justify-center gap-3">
+                <a href="#get-started" class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 font-semibold text-white shadow-lg shadow-brand/25 hover:bg-brand/90">
+                    Get started <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/> </svg>
+                </a>
+                <a href="https://github.com/pokertour/O365KioskResources" class="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-5 py-3 font-semibold hover:bg-zinc-50 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10">
+                    View on GitHub
+                </a>
+            </div>
+        </section>
+
+        <!-- Wall screen -->
+        <figure class="relative mx-auto max-w-5xl px-5 sm:px-8">
+            <div aria-hidden="true" class="absolute inset-x-[10%] top-1/3 -bottom-6 -z-10 rounded-full bg-brand/25 blur-2xl"></div>
+            <div class="rounded-[1.75rem] bg-zinc-900 p-2.5 shadow-2xl ring-1 ring-black/10 sm:p-3.5 dark:bg-zinc-800 dark:ring-white/10">
+                <img src="images/kiosk-landscape.webp" width="1920" height="1080" alt="Room screen showing a meeting in progress and the day's timeline" class="block w-full rounded-[1.25rem]" fetchpriority="high" />
+            </div>
+            <div aria-hidden="true" class="mx-auto h-6 w-28 bg-linear-to-b from-zinc-300 to-zinc-200 dark:from-zinc-700 dark:to-zinc-800"></div>
+            <div aria-hidden="true" class="mx-auto h-2 w-56 rounded-t-lg bg-zinc-300 dark:bg-zinc-700"></div>
+        </figure>
+
+        <!-- Logos / stack -->
+        <section class="mx-auto mt-16 max-w-6xl px-5 sm:px-8">
+            <p class="text-center text-xs font-semibold tracking-widest text-zinc-400 uppercase">Built with</p>
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                <span>Laravel 13</span><span>Livewire 4</span><span>Tailwind CSS 4</span><span>Microsoft Graph</span><span>FrankenPHP</span><span>Docker</span>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section id="features" class="mx-auto mt-28 max-w-6xl scroll-mt-24 px-5 sm:px-8">
+            <div class="max-w-2xl">
+                <p class="text-sm font-semibold text-brand">Room screens</p>
+                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">Readable from across the hall. Useful up close.</h2>
+            </div>
+            <div class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-200 sm:grid-cols-2 lg:grid-cols-3 dark:border-white/[0.08] dark:bg-white/[0.08]">
+                <div class="bg-white p-6 sm:p-7 dark:bg-zinc-900"><span class="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/> </svg></span><h3 class="mt-5 font-semibold">Live status</h3><p class="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">Available, starting soon or busy, in large type and your brand colours — visible from the end of the corridor.</p></div><div class="bg-white p-6 sm:p-7 dark:bg-zinc-900"><span class="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/> </svg></span><h3 class="mt-5 font-semibold">Timeline or list</h3><p class="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">Today&#x27;s meetings sized by duration, with a moving &quot;now&quot; line and free slots you can tap to book.</p></div><div class="bg-white p-6 sm:p-7 dark:bg-zinc-900"><span class="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.834.166-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243-1.59-1.59"/> </svg></span><h3 class="mt-5 font-semibold">Book on the spot</h3><p class="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">15, 30 or 60 minutes in one tap. Edit or cancel bookings made from the screen, end or extend a meeting.</p></div><div class="bg-white p-6 sm:p-7 dark:bg-zinc-900"><span class="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5h3m-6.75 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-15a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 4.5v15a2.25 2.25 0 0 0 2.25 2.25Z"/> </svg></span><h3 class="mt-5 font-semibold">Any size, any orientation</h3><p class="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">Landscape or portrait, text scaled to the resolution and viewing distance, dark or light theme.</p></div><div class="bg-white p-6 sm:p-7 dark:bg-zinc-900"><span class="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/> </svg></span><h3 class="mt-5 font-semibold">Night mode</h3><p class="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">Dims outside working hours, shifts pixels against OLED burn-in and wakes up on touch.</p></div><div class="bg-white p-6 sm:p-7 dark:bg-zinc-900"><span class="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46"/> </svg></span><h3 class="mt-5 font-semibold">Announcements &amp; issues</h3><p class="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">Push banners to some or all screens, and let people report a broken screen or a cold room.</p></div>
+            </div>
+        </section>
+
+        <!-- Everywhere -->
+        <section class="mx-auto mt-28 grid max-w-6xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            <div>
+                <p class="text-sm font-semibold text-brand">Any screen</p>
+                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">On the wall, on a tablet, in your pocket.</h2>
+                <p class="mt-4 text-lg text-pretty text-zinc-600 dark:text-zinc-400">The screen adapts to any size and orientation, in a dark or light theme with your logo and colours. A QR code opens the room on any phone.</p>
+                <ul class="mt-8 space-y-5">
+                    <li class="flex gap-4"><span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"/> <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z"/> </svg></span><span><span class="block font-semibold">QR code for phones</span><span class="mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">People scan the screen to see the agenda and book from their phone, through a short-lived signed link.</span></span></li><li class="flex gap-4"><span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/> </svg></span><span><span class="block font-semibold">Pair with a code</span><span class="mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">Open /kiosk on a tablet, type the 6-digit code in the admin panel — done. Several screens per room.</span></span></li><li class="flex gap-4"><span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/> </svg></span><span><span class="block font-semibold">Kiosk-proof</span><span class="mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">Keeps the screen awake, full screen, no zoom, and recovers by itself after a network or server outage.</span></span></li>
+                </ul>
+            </div>
+            <div class="relative flex items-end justify-center gap-6 sm:gap-10">
+                <div aria-hidden="true" class="absolute inset-[15%] -z-10 rounded-full bg-available/20 blur-2xl"></div>
+                <div class="w-[62%] rounded-[1.6rem] bg-zinc-900 p-2 shadow-2xl ring-1 ring-black/10 sm:p-2.5 dark:bg-zinc-800 dark:ring-white/10">
+                    <img src="images/kiosk-portrait.webp" width="1080" height="1440" alt="Tablet in portrait showing a free room with quick booking buttons" class="block w-full rounded-[1.15rem]" loading="lazy" />
+                </div>
+                <div class="w-[30%] translate-y-6 rounded-[2rem] bg-zinc-900 p-1.5 shadow-2xl ring-1 ring-black/10 dark:bg-zinc-800 dark:ring-white/10">
+                    <img src="images/mobile.webp" width="780" height="1688" alt="Phone view of a room agenda, opened from the QR code" class="block w-full rounded-[1.6rem]" loading="lazy" />
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin -->
+        <section class="mx-auto mt-32 max-w-6xl px-5 sm:px-8">
+            <div class="rounded-3xl bg-zinc-900 px-6 py-14 text-white sm:px-12 dark:bg-white/[0.04] dark:ring-1 dark:ring-white/10">
+                <div class="max-w-2xl">
+                    <p class="text-sm font-semibold text-sky-300">Administration</p>
+                    <h2 class="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">Everything you need to run the screens.</h2>
+                    <p class="mt-4 text-zinc-300">A clean admin panel to manage rooms, screens and settings — and to know right away when something needs attention.</p>
+                </div>
+                <dl class="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+                    <div><dt class="flex items-center gap-3 font-semibold"><span class="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sky-300"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/> </svg></span>Live dashboard</dt><dd class="mt-2 text-sm text-zinc-400">Every room&#x27;s status, screens online, open issues — refreshed automatically.</dd></div><div><dt class="flex items-center gap-3 font-semibold"><span class="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sky-300"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/> </svg></span>Import from Microsoft 365</dt><dd class="mt-2 text-sm text-zinc-400">List the tenant&#x27;s room mailboxes and add them in a click.</dd></div><div><dt class="flex items-center gap-3 font-semibold"><span class="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sky-300"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/> </svg></span>Occupancy statistics</dt><dd class="mt-2 text-sm text-zinc-400">Occupancy per room over 7, 30 or 90 days, and peak hours.</dd></div><div><dt class="flex items-center gap-3 font-semibold"><span class="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sky-300"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5"/> </svg></span>Offline alerts</dt><dd class="mt-2 text-sm text-zinc-400">E-mail and Microsoft Teams alerts when a screen stops reporting.</dd></div><div><dt class="flex items-center gap-3 font-semibold"><span class="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sky-300"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z"/> </svg></span>Your brand</dt><dd class="mt-2 text-sm text-zinc-400">Logo, colours and theme, with a live preview of the screens.</dd></div><div><dt class="flex items-center gap-3 font-semibold"><span class="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sky-300"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon"> <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/> </svg></span>Secure by design</dt><dd class="mt-2 text-sm text-zinc-400">Microsoft sign-in for admins, revocable screen links, encrypted secrets, activity log.</dd></div>
+                </dl>
+            </div>
+        </section>
+
+        <!-- Get started -->
+        <section id="get-started" class="mx-auto mt-32 max-w-6xl scroll-mt-24 px-5 sm:px-8">
+            <div class="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                <div>
+                    <p class="text-sm font-semibold text-brand">Get started</p>
+                    <h2 class="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">Up and running in a few minutes.</h2>
+                    <ol class="mt-8 space-y-6">
+                        <li class="flex gap-4"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">1</span><span><span class="block font-semibold">Run the Docker image</span><span class="mt-1 block text-sm text-zinc-600 dark:text-zinc-400">One image for the web server, the queue worker and the scheduler. SQLite by default, MySQL and PostgreSQL supported.</span></span></li><li class="flex gap-4"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">2</span><span><span class="block font-semibold">Connect Microsoft 365</span><span class="mt-1 block text-sm text-zinc-600 dark:text-zinc-400">Register an app in Microsoft Entra ID, grant Calendars.ReadWrite, and paste the IDs in the admin panel. The app checks the permissions for you.</span></span></li><li class="flex gap-4"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">3</span><span><span class="block font-semibold">Import rooms and pair screens</span><span class="mt-1 block text-sm text-zinc-600 dark:text-zinc-400">Import the tenant&#x27;s rooms, then open /kiosk on each tablet and enter its code.</span></span></li>
+                    </ol>
+                </div>
+                <div class="space-y-6">
+                    <div class="overflow-hidden rounded-2xl bg-zinc-900 shadow-xl ring-1 ring-black/10 dark:ring-white/10">
+                        <div class="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+                            <div class="flex gap-1.5"><span class="size-3 rounded-full bg-white/15"></span><span class="size-3 rounded-full bg-white/15"></span><span class="size-3 rounded-full bg-white/15"></span></div>
+                            <button type="button" data-copy="docker-run" class="rounded-md px-2 py-1 text-xs font-medium text-zinc-400 hover:bg-white/10 hover:text-white">Copy</button>
+                        </div>
+<pre id="docker-run" class="overflow-x-auto p-5 text-[13px] leading-relaxed text-zinc-200"><code><span class="text-zinc-500"># 1. Generate an application key</span>
+docker run --rm ghcr.io/pokertour/o365kioskresources \
+  php artisan key:generate --show
+
+<span class="text-zinc-500"># 2. Run the application (SQLite in a volume)</span>
+docker run -d --name rooms -p 8080:8080 \
+  -e APP_KEY="base64:…" \
+  -e APP_URL="http://localhost:8080" \
+  -e RUN_MIGRATIONS=true \
+  -v rooms-storage:/app/storage \
+  ghcr.io/pokertour/o365kioskresources:latest
+
+<span class="text-zinc-500"># 3. Create the first administrator</span>
+docker exec -it -e ADMIN_EMAIL=you@company.com \
+  -e ADMIN_PASSWORD='a-strong-password' \
+  rooms php artisan db:seed --force</code></pre>
+                    </div>
+
+                    <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-white/[0.08] dark:bg-zinc-900">
+                        <div class="border-b border-zinc-100 px-5 py-3 text-sm font-semibold dark:border-white/[0.06]">Microsoft Graph permissions</div>
+                        <table class="w-full text-sm">
+                            <tbody class="divide-y divide-zinc-100 dark:divide-white/[0.06]">
+                                <tr><td class="px-5 py-3 font-mono text-xs font-semibold">Calendars.ReadWrite</td><td class="px-3 py-3 text-zinc-500">Application</td><td class="px-5 py-3 text-zinc-600 dark:text-zinc-400">Read and book room calendars <span class="ms-1 rounded bg-brand/10 px-1.5 py-0.5 text-[11px] font-semibold text-brand">required</span></td></tr>
+                                <tr><td class="px-5 py-3 font-mono text-xs font-semibold">Place.Read.All</td><td class="px-3 py-3 text-zinc-500">Application</td><td class="px-5 py-3 text-zinc-600 dark:text-zinc-400">Import the tenant's rooms</td></tr>
+                                <tr><td class="px-5 py-3 font-mono text-xs font-semibold">User.Read</td><td class="px-3 py-3 text-zinc-500">Delegated</td><td class="px-5 py-3 text-zinc-600 dark:text-zinc-400">Admin sign-in with Microsoft</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to action -->
+        <section class="mx-auto mt-32 mb-20 max-w-6xl px-5 text-center sm:px-8">
+            <h2 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">Give every room a screen it deserves.</h2>
+            <p class="mx-auto mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-400">Free and open source under the MIT license. Self-host it on your own infrastructure.</p>
+            <div class="mt-8 flex flex-wrap justify-center gap-3">
+                <a href="https://github.com/pokertour/O365KioskResources" class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 font-semibold text-white shadow-lg shadow-brand/25 hover:bg-brand/90">Star on GitHub</a>
+                <a href="https://github.com/pokertour/O365KioskResources#readme" class="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-5 py-3 font-semibold hover:bg-zinc-50 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10">Read the documentation</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-zinc-200 dark:border-white/[0.08]">
+        <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-zinc-500 sm:px-8">
+            <span class="flex items-center gap-2"><img src="icon.svg" alt="" width="20" height="20" class="size-5" /> O365 Kiosk Resources · MIT © pokertour</span>
+            <span class="flex gap-5">
+                <a href="https://github.com/pokertour/O365KioskResources" class="hover:text-zinc-900 dark:hover:text-white">GitHub</a>
+                <a href="https://github.com/pokertour/O365KioskResources/pkgs/container/o365kioskresources" class="hover:text-zinc-900 dark:hover:text-white">Docker image</a>
+                <a href="https://github.com/pokertour/O365KioskResources/blob/main/LICENSE" class="hover:text-zinc-900 dark:hover:text-white">License</a>
+            </span>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('[data-copy]').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const text = document.getElementById(button.dataset.copy).innerText;
+                try { await navigator.clipboard.writeText(text); button.textContent = 'Copied'; } catch (e) { button.textContent = 'Select & copy'; }
+                setTimeout(() => (button.textContent = 'Copy'), 1500);
+            });
+        });
+    </script>
+</body>
+</html>

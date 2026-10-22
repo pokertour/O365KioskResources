@@ -1,0 +1,11 @@
+/* GitHub Pages site — compiled with the Tailwind CLI by .github/workflows/pages.yml */
+@import 'tailwindcss';
+
+@source './index.html';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --color-brand: #2563eb;
+    --color-available: #16a34a;
+    --color-busy: #dc2626;
+}
