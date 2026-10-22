@@ -1,14 +1,10 @@
 <?php
 
 use App\Models\Room;
-use Illuminate\Support\Str;
 
 test('kiosk page loads with valid token', function () {
-    $plain = Str::random(48);
-    $room = Room::factory()->create([
-        'slug' => 'salle-test',
-        'kiosk_token_hash' => Room::hashKioskToken($plain),
-    ]);
+    $room = Room::factory()->create(['slug' => 'salle-test']);
+    $plain = $room->rotateKioskToken();
 
     $this->get(route('kiosk.show', ['room' => $room, 'token' => $plain]))
         ->assertOk();
