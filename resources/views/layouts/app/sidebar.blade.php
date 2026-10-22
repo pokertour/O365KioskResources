@@ -63,6 +63,7 @@
             <flux:spacer />
 
             <x-desktop-user-menu class="hidden lg:block" />
+            <p class="hidden px-2 pb-1 text-[11px] text-zinc-400 tabular-nums lg:block dark:text-zinc-600" title="{{ __('Version') }}">{{ app_version() }}</p>
         </flux:sidebar>
 
         <flux:header class="border-b border-zinc-200 bg-white/90 backdrop-blur lg:hidden dark:border-white/[0.06] dark:bg-zinc-950/90">

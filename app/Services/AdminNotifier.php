@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendAdminAlert;
 use App\Models\AppSetting;
 use App\Models\User;
 use App\Notifications\AdminAlert;
@@ -16,7 +17,15 @@ use Illuminate\Support\Facades\Notification;
  */
 class AdminNotifier
 {
+    /**
+     * Queues the alert (delivered by the queue worker, or immediately with the "sync" driver).
+     */
     public function send(string $title, string $body, ?string $url = null, ?string $actionLabel = null): void
+    {
+        SendAdminAlert::dispatch($title, $body, $url, $actionLabel);
+    }
+
+    public function deliver(string $title, string $body, ?string $url = null, ?string $actionLabel = null): void
     {
         $settings = AppSetting::current();
 

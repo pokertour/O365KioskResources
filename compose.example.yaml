@@ -1,0 +1,47 @@
+# Example deployment with Docker Compose.
+#   cp compose.example.yaml compose.yaml && cp .env.example .env.docker   (then edit both)
+#   docker compose up -d
+#
+# Put a reverse proxy (Caddy, Traefik, Nginx…) with HTTPS in front of port 8080, or set
+# SERVER_NAME to your domain to let FrankenPHP obtain a certificate itself (ports 80/443).
+
+x-app: &app
+  image: ghcr.io/pokertour/o365kioskresources:latest
+  restart: unless-stopped
+  env_file: .env.docker
+  environment:
+    APP_ENV: production
+    APP_URL: https://salles.example.com
+    TRUSTED_PROXIES: '*'          # the container is only reachable through the proxy
+    # SQLite in the storage volume by default; for MySQL/PostgreSQL set DB_* here.
+  volumes:
+    - storage:/app/storage
+
+services:
+  app:
+    <<: *app
+    command: app
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: production
+      APP_URL: https://salles.example.com
+      TRUSTED_PROXIES: '*'
+      RUN_MIGRATIONS: 'true'      # run migrations at start-up (web container only)
+
+  worker:                         # sends notifications (e-mail, Teams)
+    <<: *app
+    command: worker
+    healthcheck:
+      disable: true
+    depends_on: [app]
+
+  scheduler:                      # offline screen alerts, clean-up
+    <<: *app
+    command: scheduler
+    healthcheck:
+      disable: true
+    depends_on: [app]
+
+volumes:
+  storage:

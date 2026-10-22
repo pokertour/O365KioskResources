@@ -19,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
             SecurityHeaders::class,
         ]);
 
+        // Behind a reverse proxy (Docker, load balancer): trust it so HTTPS, client IPs and signed
+        // URLs (phone view QR codes) are seen as the visitor sees them. Comma-separated IPs/CIDRs, or *.
+        if (filled($proxies = env('TRUSTED_PROXIES'))) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
+
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
         ]);

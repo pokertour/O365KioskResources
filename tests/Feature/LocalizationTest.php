@@ -130,3 +130,13 @@ test('working hours must end after they start', function () {
         ->call('save')
         ->assertHasErrors('day_end');
 });
+
+test('the app version is shown, "local-dev" outside tagged builds', function () {
+    config(['app.version' => 'local-dev']);
+    expect(app_version())->toBe('local-dev');
+
+    config(['app.version' => '1.4.2']);
+    expect(app_version())->toBe('v1.4.2');
+
+    $this->actingAs(User::factory()->create())->get(route('admin.general'))->assertSee('v1.4.2');
+});

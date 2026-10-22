@@ -42,3 +42,15 @@ if (! function_exists('fmt_duration')) {
         return intdiv($minutes, 60).' h'.($rest ? ' '.str_pad((string) $rest, 2, '0', STR_PAD_LEFT) : '');
     }
 }
+
+if (! function_exists('app_version')) {
+    /**
+     * "v1.2.3" for tagged builds, "local-dev" otherwise.
+     */
+    function app_version(): string
+    {
+        $version = (string) config('app.version', 'local-dev');
+
+        return preg_match('/^\d+\.\d+\.\d+$/', $version) === 1 ? 'v'.$version : $version;
+    }
+}

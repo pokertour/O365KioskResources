@@ -164,6 +164,59 @@ Documentation Microsoft : [Microsoft Graph permissions reference](https://learn.
 
 ---
 
+## Déploiement (Docker)
+
+### Publier une version
+
+Une image est construite et publiée sur GitHub Container Registry à chaque **tag de version** `X.X.X` :
+
+```bash
+git tag 1.0.0
+git push origin 1.0.0
+```
+
+Le workflow `.github/workflows/release.yml` lance d’abord les tests (Pint + Pest), puis publie `ghcr.io/pokertour/o365kioskresources` avec les tags `1.0.0`, `1.0` et `latest`. La version est affichée dans l’administration (bas du menu, Paramètres › Général, `php artisan about`) ; une copie locale affiche `local-dev`.
+
+> Au premier push, le paquet GHCR est privé : rendez-le public ou connectez le serveur à GHCR (`docker login ghcr.io`) depuis les paramètres du paquet sur GitHub.
+
+### L’image
+
+Basée sur **FrankenPHP (PHP 8.5)**, utilisateur non-root, port **8080**, healthcheck sur `/up`. Une seule image, trois rôles (argument de commande) :
+
+| Rôle | Commande | Rôle |
+|------|----------|------|
+| `app` (défaut) | `frankenphp run` | Serveur web |
+| `worker` | `php artisan queue:work` | Envoi des notifications (e-mail, Teams) |
+| `scheduler` | `php artisan schedule:work` | Alertes écrans hors ligne, nettoyage |
+
+Au démarrage : création des dossiers de `storage`, `php artisan optimize`, et migrations si `RUN_MIGRATIONS=true` (rôle `app` uniquement).
+
+Variables principales :
+
+| Variable | Description |
+|----------|-------------|
+| `APP_KEY` | **Obligatoire.** `docker run --rm ghcr.io/pokertour/o365kioskresources php artisan key:generate --show` |
+| `APP_URL` | URL publique (`https://salles.example.com`) |
+| `TRUSTED_PROXIES` | `*` ou IP/CIDR du reverse proxy (nécessaire pour HTTPS et les QR codes) |
+| `RUN_MIGRATIONS` | `true` pour migrer au démarrage du conteneur `app` |
+| `DB_*` | SQLite par défaut dans le volume (`/app/storage/database.sqlite`) ; MySQL/PostgreSQL supportés |
+| `MAIL_*` | Serveur d’envoi des alertes |
+| `SERVER_NAME` | `:8080` par défaut (HTTP derrière un proxy) ; mettre un domaine pour que FrankenPHP gère lui-même le HTTPS |
+
+Le volume **`/app/storage`** contient la base SQLite, le logo et les sessions : à sauvegarder.
+
+### Docker Compose
+
+Voir [`compose.example.yaml`](compose.example.yaml) (app + worker + scheduler, volume partagé). Placez un reverse proxy HTTPS devant le port 8080 : le HTTPS est requis pour que les tablettes restent allumées (Wake Lock).
+
+Construire l’image localement :
+
+```bash
+docker build --build-arg APP_VERSION=1.0.0 -t o365-kiosk .
+```
+
+---
+
 ## Développement
 
 ```bash

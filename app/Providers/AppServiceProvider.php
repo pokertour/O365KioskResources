@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Models\BrandingSetting;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
+use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -32,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureBrandingViewData();
+
+        AboutCommand::add('O365 Kiosk Resources', fn () => ['Version' => config('app.version')]);
 
         // Re-run these route middleware on every Livewire update request, not only on page load:
         // a demoted admin with an open tab must not be able to keep calling component actions.

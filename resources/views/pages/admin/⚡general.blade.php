@@ -127,7 +127,8 @@ new #[Title('General')] class extends Component {
             </div>
         </x-admin.card>
 
-        <div class="flex justify-end">
+        <div class="flex items-center justify-between gap-4">
+            <p class="text-sm text-zinc-500">{{ __('Version') }} <span class="font-mono text-zinc-700 dark:text-zinc-300">{{ app_version() }}</span></p>
             <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
         </div>
     </form>
