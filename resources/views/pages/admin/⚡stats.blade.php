@@ -43,7 +43,7 @@ new #[Title('Statistics')] class extends Component {
 @endphp
 
 <div wire:init="load">
-    <x-admin.page-header :title="__('Statistics')" :description="__('Room occupancy during working hours, Monday to Friday.')">
+    <x-admin.page-header icon="chart-bar" :title="__('Statistics')" :description="__('Room occupancy during working hours, Monday to Friday.')">
         <x-slot:actions>
             <flux:radio.group wire:model.live="days" variant="segmented" size="sm">
                 <flux:radio :value="7" :label="__('7 days')" />
@@ -71,21 +71,92 @@ new #[Title('Statistics')] class extends Component {
             {{-- Headline numbers --}}
             <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 @foreach ([
-                    [__('Average occupancy'), $stats['totals']['occupancy'].' %'],
-                    [__('Meetings'), number_format($stats['totals']['meetings'], 0, ',', ' ')],
-                    [__('Hours booked'), number_format($stats['totals']['hours'], 0, ',', ' ').' h'],
-                    [__('Booked via the app'), number_format($stats['totals']['app_bookings'], 0, ',', ' ')],
-                ] as [$label, $value])
-                    <div class="rounded-xl border border-zinc-200 bg-white px-4 py-3 dark:border-white/[0.08] dark:bg-zinc-900">
-                        <div class="text-xs font-medium text-zinc-500">{{ $label }}</div>
-                        <div class="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-white">{{ $value }}</div>
+                    ['chart-pie', __('Average occupancy'), $stats['totals']['occupancy'].' %'],
+                    ['calendar-days', __('Meetings'), number_format($stats['totals']['meetings'], 0, ',', ' ')],
+                    ['clock', __('Hours booked'), number_format($stats['totals']['hours'], 0, ',', ' ').' h'],
+                    ['device-tablet', __('Booked via the app'), number_format($stats['totals']['app_bookings'], 0, ',', ' ')],
+                ] as [$icon, $label, $value])
+                    <div class="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white px-3.5 py-4 sm:gap-4 sm:px-4 shadow-xs shadow-zinc-950/[0.03] dark:border-white/[0.07] dark:bg-white/[0.025]">
+                        <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand ring-1 ring-brand/20 ring-inset dark:text-[color-mix(in_oklab,var(--color-brand)_55%,white)]">
+                            <flux:icon :name="$icon" class="size-5" />
+                        </span>
+                        <div class="min-w-0">
+                            <div class="text-2xl leading-none font-semibold tracking-tight tabular-nums text-zinc-900 dark:text-white">{{ $value }}</div>
+                            <div class="mt-1 line-clamp-2 text-xs leading-tight font-medium text-zinc-500 dark:text-zinc-400">{{ $label }}</div>
+                        </div>
                     </div>
                 @endforeach
             </div>
 
+            {{-- Daily occupancy trend --}}
+            @php
+                $daily = $stats['daily'];
+                $count = count($daily);
+                $peak = $count ? max(array_column($daily, 'occupancy')) : 0;
+                $ceiling = (int) min(100, max(20, ceil($peak / 20) * 20));
+                $points = [];
+                foreach ($daily as $k => $d) {
+                    $points[] = [
+                        'x' => $count > 1 ? $k / ($count - 1) * 100 : 50,
+                        'y' => 100 - min($d['occupancy'], $ceiling) / $ceiling * 100,
+                        'label' => ucfirst($d['date']->isoFormat('ddd D MMM')),
+                        'value' => $d['occupancy'],
+                    ];
+                }
+                $line = collect($points)->map(fn ($p) => round($p['x'] * 10, 2).','.round($p['y'] * 2, 2))->implode(' ');
+            @endphp
+            @if ($count > 1)
+                <x-admin.card icon="arrow-trending-up" :title="__('Daily occupancy')" :description="__('Average of all rooms, working days only.')" class="mt-6">
+                    <div class="flex gap-3" data-points="{{ json_encode($points) }}" x-data="{ i: null, points: JSON.parse($el.dataset.points) }">
+                        <div class="flex h-48 w-8 shrink-0 flex-col justify-between py-0 text-right text-[11px] tabular-nums text-zinc-400 dark:text-zinc-500">
+                            @foreach ([1, 0.75, 0.5, 0.25, 0] as $f)
+                                <span class="-my-1.5 leading-3">{{ round($ceiling * $f) }} %</span>
+                            @endforeach
+                        </div>
+                        <div class="relative h-48 flex-1">
+                            {{-- Grid --}}
+                            @foreach ([0, 25, 50, 75, 100] as $g)
+                                <div class="absolute inset-x-0 border-t {{ $g === 100 ? 'border-zinc-300 dark:border-white/15' : 'border-dashed border-zinc-200/80 dark:border-white/[0.06]' }}" style="top: {{ $g }}%"></div>
+                            @endforeach
+                            <svg viewBox="0 0 1000 200" preserveAspectRatio="none" class="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="occ-fill" x1="0" x2="0" y1="0" y2="1">
+                                        <stop offset="0%" stop-color="var(--color-brand)" stop-opacity="0.28" />
+                                        <stop offset="100%" stop-color="var(--color-brand)" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                <polygon points="0,200 {{ $line }} 1000,200" fill="url(#occ-fill)" />
+                                <polyline points="{{ $line }}" fill="none" stroke="var(--color-brand)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+                            </svg>
+                            {{-- Hover layer: one column per day, wider than the marks --}}
+                            <div class="absolute inset-0 flex" x-on:mouseleave="i = null">
+                                @foreach ($points as $k => $p)
+                                    <div class="h-full flex-1" x-on:mouseenter="i = {{ $k }}"></div>
+                                @endforeach
+                            </div>
+                            <template x-if="i !== null">
+                                <div class="pointer-events-none absolute inset-0">
+                                    <div class="absolute inset-y-0 w-px bg-zinc-300 dark:bg-white/20" x-bind:style="`left: ${points[i].x}%`"></div>
+                                    <div class="absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand ring-2 ring-white dark:ring-zinc-900" x-bind:style="`left: ${points[i].x}%; top: ${points[i].y}%`"></div>
+                                    <div class="absolute top-0 z-20 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lg dark:bg-white dark:text-zinc-900"
+                                         x-bind:style="`left: ${points[i].x}%; transform: translate(${points[i].x > 85 ? '-100%' : (points[i].x < 15 ? '0' : '-50%')}, calc(-100% - 0.5rem))`">
+                                        <span x-text="points[i].label"></span> · <span class="font-semibold tabular-nums" x-text="`${points[i].value} %`"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex justify-between ps-11 text-[11px] text-zinc-400 tabular-nums dark:text-zinc-500">
+                        <span>{{ $points[0]['label'] }}</span>
+                        <span>{{ $points[intdiv($count, 2)]['label'] }}</span>
+                        <span>{{ $points[$count - 1]['label'] }}</span>
+                    </div>
+                </x-admin.card>
+            @endif
+
             <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                 {{-- Occupancy per room: bars + table in one --}}
-                <x-admin.card :title="__('Occupancy by room')" :description="__(':from – :to', ['from' => $stats['from']->isoFormat('LL'), 'to' => $stats['to']->isoFormat('LL')])" :padded="false">
+                <x-admin.card icon="chart-bar-square" :title="__('Occupancy by room')" :description="__(':from – :to', ['from' => $stats['from']->isoFormat('LL'), 'to' => $stats['to']->isoFormat('LL')])" :padded="false">
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
@@ -128,7 +199,7 @@ new #[Title('Statistics')] class extends Component {
                 </x-admin.card>
 
                 {{-- Peak hours heatmap (single hue, light → dark) --}}
-                <x-admin.card :title="__('Peak hours')" :description="__('Average occupancy of all rooms per time slot.')">
+                <x-admin.card icon="fire" :title="__('Peak hours')" :description="__('Average occupancy of all rooms per time slot.')">
                     <div class="overflow-x-auto">
                         <div class="inline-grid min-w-full gap-[2px]" style="grid-template-columns: 2.5rem repeat({{ count($stats['hours']) }}, minmax(1.6rem, 1fr))">
                             <div></div>

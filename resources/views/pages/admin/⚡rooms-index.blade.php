@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\AppSetting;
 use App\Models\IssueReport;
 use App\Models\Room;
 use App\Services\MicrosoftGraphService;
@@ -67,16 +68,40 @@ new #[Title('Rooms')] class extends Component {
         }
 
         $schedule = app(RoomSchedule::class);
+        $now = $schedule->now();
+        $midnight = $now->startOfDay();
         $out = [];
         foreach ($this->rooms as $room) {
             $day = $schedule->today($room);
             $status = $schedule->status($day['events']);
+
+            // Day strip: each meeting as a segment of the room's working hours (in %).
+            [$from, $to] = AppSetting::forRoom($room)->dayHours();
+            $span = ($to - $from) * 60;
+            $at = fn ($time) => max(0, min(100, ($midnight->diffInMinutes($time) - $from * 60) / $span * 100));
+            $blocks = [];
+            foreach ($day['events'] as $event) {
+                if ($event['is_all_day'] || $at($event['end']) - $at($event['start']) <= 0) {
+                    continue;
+                }
+                $blocks[] = [
+                    'left' => $at($event['start']),
+                    'width' => max($at($event['end']) - $at($event['start']), 1),
+                    'when' => $event['end'] <= $now ? 'past' : ($event['start'] <= $now ? 'now' : 'later'),
+                    'label' => fmt_time($event['start']).' – '.fmt_time($event['end']).' · '.$schedule->displaySubject($room, $event),
+                ];
+            }
+            $nowAt = $midnight->diffInMinutes($now) / 60;
+
             $out[$room->id] = [
                 'state' => $status['state'],
                 'current' => $status['current'] ? ['subject' => $schedule->displaySubject($room, $status['current'])] + $status['current'] : null,
                 'next' => $status['next'] ? ['subject' => $schedule->displaySubject($room, $status['next'])] + $status['next'] : null,
                 'until' => $status['until'],
                 'error' => $day['error'],
+                'blocks' => $blocks,
+                'now' => $nowAt >= $from && $nowAt <= $to ? $at($now) : null,
+                'hours' => [$midnight->addMinutes((int) round($from * 60)), $midnight->addMinutes((int) round($to * 60))],
             ];
         }
 
@@ -173,7 +198,7 @@ new #[Title('Rooms')] class extends Component {
 }; ?>
 
 <div wire:poll.30s.visible>
-    <x-admin.page-header :title="__('Rooms')" :description="__('Live status of every room and of its screen.')">
+    <x-admin.page-header icon="building-office-2" :title="__('Rooms')" :description="__('Live status of every room and of its screen.')">
         <x-slot:actions>
             @if ($this->graphConfigured)
                 <flux:button icon="arrow-down-tray" wire:click="openImport" wire:loading.attr="disabled" wire:target="openImport">{{ __('Import from Microsoft 365') }}</flux:button>
@@ -198,16 +223,28 @@ new #[Title('Rooms')] class extends Component {
         @php
             $summary = $this->summary;
         @endphp
-        <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
             @foreach ([
-                ['free', __('Available'), 'bg-available', $summary['free']],
-                ['busy', __('Busy'), 'bg-busy', $summary['busy']],
-                ['offline', __('Screens offline'), 'bg-zinc-400', $summary['offline']],
-                ['issues', __('Open issues'), 'bg-amber-500', $summary['issues']],
-            ] as [$key, $label, $dot, $value])
-                <div class="rounded-xl border border-zinc-200 bg-white px-4 py-3 dark:border-white/[0.08] dark:bg-zinc-900">
-                    <div class="flex items-center gap-2 text-xs font-medium text-zinc-500"><span class="size-2 rounded-full {{ $dot }}"></span>{{ $label }}</div>
-                    <div @class(['mt-1 text-2xl font-semibold tabular-nums', 'text-zinc-900 dark:text-white' => ! (in_array($key, ['offline', 'issues']) && $value > 0), 'text-amber-600 dark:text-amber-400' => in_array($key, ['offline', 'issues']) && $value > 0])>{{ $value }}</div>
+                ['free', __('Available'), 'check-circle', 'bg-available/10 text-available ring-available/20', false],
+                ['busy', __('Busy'), 'calendar-days', 'bg-busy/10 text-busy ring-busy/20', false],
+                ['offline', __('Screens offline'), 'signal-slash', 'bg-zinc-500/10 text-zinc-500 ring-zinc-500/20 dark:text-zinc-400', true],
+                ['issues', __('Open issues'), 'flag', 'bg-amber-500/10 text-amber-600 ring-amber-500/20 dark:text-amber-400', true],
+            ] as [$key, $label, $icon, $chip, $warn])
+                @php
+                    $alert = $warn && $summary[$key] > 0;
+                @endphp
+                <div @class([
+                    'flex items-center gap-3 rounded-2xl border px-3.5 py-4 sm:gap-4 sm:px-4 shadow-xs shadow-zinc-950/[0.03] transition',
+                    'border-zinc-200/80 bg-white dark:border-white/[0.07] dark:bg-white/[0.025]' => ! $alert,
+                    'border-amber-300/70 bg-amber-50 dark:border-amber-400/25 dark:bg-amber-400/[0.06]' => $alert,
+                ])>
+                    <span class="flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset {{ $alert ? 'bg-amber-500/15 text-amber-600 ring-amber-500/25 dark:text-amber-400' : $chip }}">
+                        <flux:icon :name="$icon" class="size-5" />
+                    </span>
+                    <div class="min-w-0">
+                        <div @class(['text-2xl leading-none font-semibold tracking-tight tabular-nums', 'text-zinc-900 dark:text-white' => ! $alert, 'text-amber-700 dark:text-amber-300' => $alert])>{{ $summary[$key] }}</div>
+                        <div class="mt-1 line-clamp-2 text-xs leading-tight font-medium text-zinc-500 dark:text-zinc-400">{{ $label }}</div>
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -243,36 +280,55 @@ new #[Title('Rooms')] class extends Component {
                     $onlineCount = $seen->filter(fn ($s) => $s->isOnline())->count();
                     $kioskUrl = $room->screens->first()?->kioskUrl();
                 @endphp
-                <article wire:key="room-{{ $room->id }}" class="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-zinc-300 hover:shadow-sm dark:border-white/[0.08] dark:bg-zinc-900 dark:hover:border-white/15">
-                    <div @class([
-                        'h-1',
-                        'bg-busy' => $state === 'busy',
-                        'bg-soon' => $state === 'soon',
-                        'bg-available' => $state === 'free',
-                        'bg-zinc-200 dark:bg-white/10' => $state === null,
+                <article wire:key="room-{{ $room->id }}" class="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xs shadow-zinc-950/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-950/[0.06] dark:border-white/[0.07] dark:bg-white/[0.025] dark:shadow-none dark:hover:border-white/15 dark:hover:bg-white/[0.04]">
+                    <div aria-hidden="true" @class([
+                        'pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b to-transparent opacity-70',
+                        'from-busy/10' => $state === 'busy',
+                        'from-soon/10' => $state === 'soon',
+                        'from-available/10' => $state === 'free',
+                        'from-transparent' => $state === null,
                     ])></div>
-                    <div class="flex flex-1 flex-col p-5">
+                    <div class="relative flex flex-1 flex-col p-5">
                         <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <a href="{{ route('admin.rooms.show', $room) }}" wire:navigate class="block truncate font-semibold text-zinc-900 after:absolute after:inset-0 dark:text-white">
-                                    {{ $room->name }}
-                                </a>
-                                <p class="truncate text-sm text-zinc-500">{{ $room->location ?: $room->o365_resource_email }}</p>
+                            <div class="flex min-w-0 items-center gap-3">
+                                <span @class([
+                                    'flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold ring-1 ring-inset',
+                                    'bg-busy/10 text-busy ring-busy/20' => $state === 'busy',
+                                    'bg-soon/10 text-soon ring-soon/20' => $state === 'soon',
+                                    'bg-available/10 text-available ring-available/20' => $state === 'free',
+                                    'bg-zinc-100 text-zinc-500 ring-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:ring-white/10' => $state === null,
+                                ])>{{ mb_strtoupper(mb_substr(trim(preg_replace('/^(salle|room)\s+/iu', '', $room->name)), 0, 2)) }}</span>
+                                <div class="min-w-0">
+                                    <a href="{{ route('admin.rooms.show', $room) }}" wire:navigate class="block truncate font-semibold text-zinc-900 after:absolute after:inset-0 dark:text-white">
+                                        {{ $room->name }}
+                                    </a>
+                                    <p class="flex items-center gap-2 truncate text-xs text-zinc-500">
+                                        <span class="truncate">{{ $room->location ?: $room->o365_resource_email }}</span>
+                                        @if ($room->capacity)
+                                            <span class="inline-flex shrink-0 items-center gap-0.5"><flux:icon.users variant="micro" class="size-3.5 opacity-70" />{{ $room->capacity }}</span>
+                                        @endif
+                                    </p>
+                                </div>
                             </div>
                             @if ($state)
                                 <span @class([
-                                    'inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                                    'bg-busy/10 text-busy' => $state === 'busy',
-                                    'bg-soon/10 text-soon' => $state === 'soon',
-                                    'bg-available/10 text-available' => $state === 'free',
+                                    'inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
+                                    'bg-busy/10 text-busy ring-busy/20' => $state === 'busy',
+                                    'bg-soon/10 text-soon ring-soon/20' => $state === 'soon',
+                                    'bg-available/10 text-available ring-available/20' => $state === 'free',
                                 ])>
-                                    <span class="size-1.5 rounded-full bg-current"></span>
+                                    <span class="relative flex size-1.5">
+                                        @if ($state !== 'free')
+                                            <span class="absolute inline-flex size-full animate-ping rounded-full bg-current opacity-60 motion-reduce:hidden"></span>
+                                        @endif
+                                        <span class="relative inline-flex size-1.5 rounded-full bg-current"></span>
+                                    </span>
                                     {{ ['busy' => __('Busy'), 'soon' => __('Starting soon'), 'free' => __('Available')][$state] }}
                                 </span>
                             @endif
                         </div>
 
-                        <div class="mt-4 min-h-10 text-sm">
+                        <div class="mt-5 min-h-10 text-sm">
                             @if ($live && $live['current'])
                                 <p class="truncate font-medium text-zinc-900 dark:text-white">{{ $live['current']['subject'] }}</p>
                                 <p class="text-zinc-500">{{ __('Free at :time', ['time' => fmt_time($live['until'])]) }}</p>
@@ -286,7 +342,34 @@ new #[Title('Rooms')] class extends Component {
                             @endif
                         </div>
 
-                        <div class="relative z-10 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-zinc-100 pt-3 text-xs dark:border-white/[0.06]">
+                        @if ($live && $live['error'] === null)
+                            {{-- The day at a glance: meetings over the working hours, with a "now" marker. --}}
+                            <div class="relative z-10 mt-4" title="{{ __('Today') }}">
+                                <div class="relative h-2 rounded-full bg-zinc-100 dark:bg-white/[0.06]">
+                                    @foreach ($live['blocks'] as $block)
+                                        <span
+                                            title="{{ $block['label'] }}"
+                                            style="left: {{ round($block['left'], 2) }}%; width: {{ round($block['width'], 2) }}%"
+                                            @class([
+                                                'absolute inset-y-0 rounded-full ring-2 ring-white dark:ring-zinc-900',
+                                                'bg-zinc-300 dark:bg-white/20' => $block['when'] === 'past',
+                                                'bg-busy' => $block['when'] === 'now',
+                                                'bg-busy/40' => $block['when'] === 'later',
+                                            ])
+                                        ></span>
+                                    @endforeach
+                                    @if ($live['now'] !== null)
+                                        <span class="absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded-full bg-zinc-900 dark:bg-white" style="left: {{ round($live['now'], 2) }}%"></span>
+                                    @endif
+                                </div>
+                                <div class="mt-1.5 flex justify-between text-[10px] text-zinc-400 tabular-nums dark:text-zinc-500">
+                                    <span>{{ fmt_time($live['hours'][0]) }}</span>
+                                    <span>{{ fmt_time($live['hours'][1]) }}</span>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="relative z-10 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-zinc-100 pt-3.5 text-xs dark:border-white/[0.06]">
                             @if ($seen->isEmpty())
                                 <span class="inline-flex items-center gap-1.5 text-zinc-400"><flux:icon.tv variant="micro" />{{ __('No screen yet') }}</span>
                             @elseif ($onlineCount === $seen->count())

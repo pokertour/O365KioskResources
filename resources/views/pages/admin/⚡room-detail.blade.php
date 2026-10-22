@@ -526,25 +526,25 @@ new #[Title('Room')] class extends Component {
 @endphp
 
 <div wire:poll.60s.visible>
-    <x-admin.page-header :title="$room->name" :back="route('admin.rooms.index')" :back-label="__('Rooms')">
+    <x-admin.page-header icon="building-office-2" :title="$room->name" :back="route('admin.rooms.index')" :back-label="__('Rooms')">
         <x-slot:meta>
-            <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+            <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
                 @if ($schedule['error'] !== 'not_configured')
                     <span @class([
-                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                        'bg-busy/10 text-busy' => $status['state'] === 'busy',
-                        'bg-soon/10 text-soon' => $status['state'] === 'soon',
-                        'bg-available/10 text-available' => $status['state'] === 'free',
+                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
+                        'bg-busy/10 text-busy ring-busy/20' => $status['state'] === 'busy',
+                        'bg-soon/10 text-soon ring-soon/20' => $status['state'] === 'soon',
+                        'bg-available/10 text-available ring-available/20' => $status['state'] === 'free',
                     ])>
                         <span class="size-1.5 rounded-full bg-current"></span>
                         {{ ['busy' => __('Busy'), 'soon' => __('Starting soon'), 'free' => __('Available')][$status['state']] }}
                     </span>
                 @endif
                 <span @class([
-                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
-                    'bg-available/10 text-available' => $everSeen > 0 && $onlineCount === $everSeen,
-                    'bg-amber-500/10 text-amber-700 dark:text-amber-300' => $onlineCount < $everSeen,
-                    'bg-zinc-100 text-zinc-500 dark:bg-white/5' => $everSeen === 0,
+                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
+                    'bg-available/10 text-available ring-available/20' => $everSeen > 0 && $onlineCount === $everSeen,
+                    'bg-amber-500/10 text-amber-700 ring-amber-500/20 dark:text-amber-300' => $onlineCount < $everSeen,
+                    'bg-zinc-100 text-zinc-500 ring-zinc-200 dark:bg-white/5 dark:ring-white/10' => $everSeen === 0,
                 ])>
                     <flux:icon.tv variant="micro" />
                     {{ $everSeen === 0 ? __('No screen yet') : __(':online/:total screens online', ['online' => $onlineCount, 'total' => $everSeen]) }}
@@ -586,7 +586,7 @@ new #[Title('Room')] class extends Component {
     {{-- ===================== Overview ===================== --}}
     @if ($tab === 'overview')
         <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            <x-admin.card :title="__('Today’s agenda')" :description="ucfirst(fmt_day($now))" :padded="false">
+            <x-admin.card icon="calendar-days" :title="__('Today’s agenda')" :description="ucfirst(fmt_day($now))" :padded="false">
                 <x-slot:headerActions>
                     <flux:button size="sm" variant="ghost" icon="arrow-path" wire:click="refreshCalendar" wire:loading.attr="disabled" wire:target="refreshCalendar">
                         {{ __('Refresh') }}
@@ -625,7 +625,13 @@ new #[Title('Room')] class extends Component {
                                 $isPast = $event['end']->lessThanOrEqualTo($now);
                                 $isCurrent = $status['current'] && $status['current']['id'] === $event['id'];
                             @endphp
-                            <li wire:key="ev-{{ md5($event['id']) }}" @class(['group flex items-center gap-4 px-5 py-3.5', 'opacity-50' => $isPast])>
+                            <li wire:key="ev-{{ md5($event['id']) }}" @class(['group relative flex items-center gap-4 px-5 py-3.5 transition hover:bg-zinc-50/80 dark:hover:bg-white/[0.02]', 'opacity-50' => $isPast, 'bg-busy/[0.04] dark:bg-busy/[0.07]' => $isCurrent])>
+                                <span aria-hidden="true" @class([
+                                    'w-1 self-stretch shrink-0 rounded-full',
+                                    'bg-zinc-200 dark:bg-white/10' => $isPast,
+                                    'bg-busy' => $isCurrent,
+                                    'bg-brand/50' => ! $isPast && ! $isCurrent,
+                                ])></span>
                                 <div class="w-24 shrink-0 text-sm tabular-nums">
                                     @if ($event['is_all_day'])
                                         <span class="font-medium text-zinc-900 dark:text-white">{{ __('All day') }}</span>
@@ -641,7 +647,7 @@ new #[Title('Room')] class extends Component {
                                             <flux:icon.video-camera variant="micro" class="shrink-0 text-zinc-400" />
                                         @endif
                                         @if ($isCurrent)
-                                            <span class="rounded-full bg-busy/10 px-2 py-0.5 text-[11px] font-semibold text-busy">{{ __('Now') }}</span>
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-busy/10 px-2 py-0.5 text-[11px] font-semibold text-busy ring-1 ring-busy/20 ring-inset"><span class="size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none"></span>{{ __('Now') }}</span>
                                         @endif
                                     </p>
                                     <p class="truncate text-xs text-zinc-500">
@@ -674,7 +680,7 @@ new #[Title('Room')] class extends Component {
 
             <div class="flex flex-col gap-6">
                 @if ($openIssues->isNotEmpty())
-                    <x-admin.card :title="__('Open issues')" :padded="false">
+                    <x-admin.card icon="exclamation-triangle" :title="__('Open issues')" :padded="false">
                         <ul class="divide-y divide-zinc-100 dark:divide-white/[0.06]">
                             @foreach ($openIssues as $issue)
                                 <li wire:key="oi-{{ $issue->id }}" class="flex items-start gap-3 px-5 py-3">
@@ -693,7 +699,7 @@ new #[Title('Room')] class extends Component {
                     </x-admin.card>
                 @endif
 
-                <x-admin.card :title="trans_choice('Screen|Screens', $screens->count())" :padded="false">
+                <x-admin.card icon="tv" :title="trans_choice('Screen|Screens', $screens->count())" :padded="false">
                     <ul class="divide-y divide-zinc-100 dark:divide-white/[0.06]">
                         @foreach ($screens as $screen)
                             <li wire:key="ov-screen-{{ $screen->id }}" class="flex items-center justify-between gap-3 px-5 py-2.5 text-sm">
@@ -708,7 +714,7 @@ new #[Title('Room')] class extends Component {
                 </x-admin.card>
 
                 @if ($room->equipmentList())
-                    <x-admin.card :title="__('Equipment')">
+                    <x-admin.card icon="wrench-screwdriver" :title="__('Equipment')">
                         <ul class="flex flex-wrap gap-2">
                             @foreach ($room->equipmentList() as $key)
                                 <li class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-white/5 dark:text-zinc-300">
@@ -726,7 +732,7 @@ new #[Title('Room')] class extends Component {
     @if ($tab === 'screen')
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <div class="flex flex-col gap-6">
-                <x-admin.card :title="__('Screens of this room')" :description="__('Each screen has its own link, its own supervision and can have its own settings.')" :padded="false">
+                <x-admin.card icon="tv" :title="__('Screens of this room')" :description="__('Each screen has its own link, its own supervision and can have its own settings.')" :padded="false">
                     <x-slot:headerActions>
                         <flux:dropdown align="end">
                             <flux:button size="sm" variant="primary" icon="plus" icon:trailing="chevron-down">{{ __('Add a screen') }}</flux:button>
@@ -787,7 +793,7 @@ new #[Title('Room')] class extends Component {
             </div>
 
             <form wire:submit="saveScreenSettings">
-                <x-admin.card :title="__('Settings shared by the screens')" :description="__('Apply to every screen of this room. “Default” uses Settings › Screens and Branding; a screen can still override them.')">
+                <x-admin.card icon="adjustments-horizontal" :title="__('Settings shared by the screens')" :description="__('Apply to every screen of this room. “Default” uses Settings › Screens and Branding; a screen can still override them.')">
                     <div class="space-y-5">
                         <flux:select wire:model="o_theme" :label="__('Theme')">
                             <flux:select.option value="">{{ __('Default') }} ({{ $branding->kioskTheme() === 'dark' ? __('Dark') : __('Light') }})</flux:select.option>
@@ -836,7 +842,7 @@ new #[Title('Room')] class extends Component {
     @if ($tab === 'settings')
         <div class="grid max-w-3xl gap-6">
             <form wire:submit="saveSettings">
-                <x-admin.card :title="__('Room')">
+                <x-admin.card icon="building-office" :title="__('Room')">
                     <div class="space-y-5">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <flux:input wire:model="name" :label="__('Name')" required />
@@ -887,29 +893,15 @@ new #[Title('Room')] class extends Component {
     {{-- ===================== Activity ===================== --}}
     @if ($tab === 'activity')
         <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <x-admin.card :title="__('Activity log')" :description="__('Last 50 events for this room.')" :padded="false">
-                @forelse ($this->activity as $log)
-                    <div wire:key="log-{{ $log->id }}" class="flex items-start gap-3 border-b border-zinc-100 px-5 py-3 last:border-0 dark:border-white/[0.06]">
-                        <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-white/5">
-                            <flux:icon :name="$log->icon()" variant="micro" class="text-zinc-500" />
-                        </div>
-                        <div class="min-w-0 flex-1 text-sm">
-                            <p class="text-zinc-900 dark:text-white">
-                                <span class="font-medium">{{ $log->label() }}</span>
-                                @if ($log->description) <span class="text-zinc-500">· {{ $log->description }}</span> @endif
-                            </p>
-                            <p class="text-xs text-zinc-500">
-                                {{ $log->actor === 'screen' ? __('From the screen') : ($log->actor === 'system' ? __('Automatic') : ($log->user?->name ?? __('Administrator'))) }}
-                                · <span title="{{ $log->created_at->setTimezone(app(\App\Services\RoomSchedule::class)->timezone())->format('d/m/Y H:i') }}">{{ $log->created_at->diffForHumans() }}</span>
-                            </p>
-                        </div>
-                    </div>
-                @empty
+            <x-admin.card icon="clock" :title="__('Activity log')" :description="__('Last 50 events for this room.')" :padded="false">
+                @if ($this->activity->isEmpty())
                     <p class="px-5 py-10 text-center text-sm text-zinc-500">{{ __('Nothing yet.') }}</p>
-                @endforelse
+                @else
+                    <x-admin.activity-timeline :logs="$this->activity" :show-room="false" />
+                @endif
             </x-admin.card>
 
-            <x-admin.card :title="__('Issue reports')" :padded="false">
+            <x-admin.card icon="flag" :title="__('Issue reports')" :padded="false">
                 @forelse ($this->issues as $issue)
                     <div wire:key="is-{{ $issue->id }}" class="flex items-start gap-3 border-b border-zinc-100 px-5 py-3 last:border-0 dark:border-white/[0.06]">
                         <flux:icon :name="$issue->resolved_at ? 'check-circle' : 'exclamation-triangle'" variant="mini" @class(['mt-0.5 shrink-0', 'text-available' => $issue->resolved_at, 'text-amber-500' => ! $issue->resolved_at]) />

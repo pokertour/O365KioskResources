@@ -243,10 +243,31 @@ test('occupancy is computed within working hours on weekdays', function () {
         ->and($row['occupancy'])->toBe(round(2 / 65 * 100, 1))
         ->and($stats['heatmap'][4][9])->toBeGreaterThan(0);
 
+    // Daily series: one point per working day; Thursday holds the 2 h meeting out of 11 h.
+    $daily = collect($stats['daily'])->keyBy(fn ($d) => $d['date']->toDateString());
+    expect($daily)->toHaveCount(6)
+        ->and($daily['2026-10-22']['occupancy'])->toBe(round(2 / 11 * 100, 1))
+        ->and($daily['2026-10-21']['occupancy'])->toBe(0.0);
+
     CarbonImmutable::setTestNow();
 });
 
 // ---------------------------------------------------------------- Activity, announcements, issues
+
+test('the activity timeline groups events by day', function () {
+    $room = Room::factory()->create(['name' => 'Horizon']);
+    ActivityLog::query()->insert([
+        ['action' => 'meeting.ended', 'actor' => 'screen', 'room_id' => $room->id, 'description' => 'Weekly', 'created_at' => now()],
+        ['action' => 'booking.cancelled', 'actor' => 'system', 'room_id' => $room->id, 'description' => 'Sprint review', 'created_at' => now()->subDay()],
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('admin.activity'))
+        ->assertOk()
+        ->assertSeeInOrder([__('Today'), __('Meeting ended early'), 'Weekly', __('Yesterday'), __('Booking cancelled'), 'Sprint review']);
+
+    expect(ActivityLog::query()->where('action', 'booking.cancelled')->sole()->tone())->toBe('busy');
+});
 
 test('screen actions are written to the activity log', function () {
     configureGraph();

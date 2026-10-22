@@ -98,7 +98,7 @@ new #[Title('Administrators')] class extends Component {
 }; ?>
 
 <div>
-    <x-admin.page-header :title="__('Administrators')" :description="__('Accounts that can manage the rooms and the settings. There is no public sign-up.')">
+    <x-admin.page-header icon="users" :title="__('Administrators')" :description="__('Accounts that can manage the rooms and the settings. There is no public sign-up.')">
         <x-slot:actions>
             <flux:modal.trigger name="create-admin">
                 <flux:button variant="primary" icon="user-plus">{{ __('Add') }}</flux:button>

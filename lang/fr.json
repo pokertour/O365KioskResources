@@ -730,5 +730,20 @@
     "“:subject” will end now and the room will be free for others.": "« :subject » se termine maintenant et la salle redevient disponible.",
     "“Add a permission” › Microsoft Graph › “Application permissions”, tick the permissions above, then “Add permissions”.": "« Ajouter une autorisation » › Microsoft Graph › « Autorisations d’application », cochez les permissions ci-dessus puis « Ajouter des autorisations ».",
     "“Room default” uses the settings shared by the room’s screens.": "« Par défaut de la salle » reprend les réglages communs aux écrans de la salle.",
-    "“Starting soon” warning": "Alerte « bientôt occupée »"
+    "“Starting soon” warning": "Alerte « bientôt occupée »",
+    "Daily occupancy": "Occupation par jour",
+    "Average of all rooms, working days only.": "Moyenne de toutes les salles, jours ouvrés uniquement.",
+    "Yesterday": "Hier",
+    "Pages": "Pages",
+    "Language, time zone": "Langue, fuseau horaire",
+    "Refresh, night mode, booking": "Actualisation, mode nuit, réservation",
+    "Logo, colours": "Logo, couleurs",
+    "E-mail, Teams": "E-mail, Teams",
+    "Connection, SSO, permissions": "Connexion, SSO, permissions",
+    "Password, two-factor authentication": "Mot de passe, double authentification",
+    "Search a page, a room, a setting…": "Rechercher une page, une salle, un réglage…",
+    "to navigate": "pour naviguer",
+    "to open": "pour ouvrir",
+    "Search…": "Rechercher…",
+    "On this page": "Sur cette page"
 }

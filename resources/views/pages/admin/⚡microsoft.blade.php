@@ -154,7 +154,7 @@ new #[Title('Microsoft 365')] class extends Component {
 }; ?>
 
 <div>
-    <x-admin.page-header title="Microsoft 365" :description="__('Connection to Microsoft Graph to read and book the room calendars.')">
+    <x-admin.page-header icon="cloud" title="Microsoft 365" :description="__('Connection to Microsoft Graph to read and book the room calendars.')">
         <x-slot:meta>
             <div class="mt-3">
                 @if ($testResult === true)
@@ -172,7 +172,7 @@ new #[Title('Microsoft 365')] class extends Component {
 
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <form wire:submit="save">
-            <x-admin.card :title="__('Entra ID app registration')" :description="__('Values available in the Microsoft Entra admin center, under “App registrations”.')">
+            <x-admin.card icon="key" :title="__('Entra ID app registration')" :description="__('Values available in the Microsoft Entra admin center, under “App registrations”.')">
                 @if (is_string($testResult))
                     <flux:callout icon="x-circle" color="red" class="mb-6">
                         <flux:callout.heading>{{ __('Microsoft refused the connection') }}</flux:callout.heading>
@@ -206,7 +206,7 @@ new #[Title('Microsoft 365')] class extends Component {
         </form>
 
         <form wire:submit="saveSso" class="lg:col-start-1">
-            <x-admin.card :title="__('Sign in with Microsoft')" :description="__('Administrators sign in with their Microsoft 365 account, with your organisation’s MFA and policies.')">
+            <x-admin.card icon="finger-print" :title="__('Sign in with Microsoft')" :description="__('Administrators sign in with their Microsoft 365 account, with your organisation’s MFA and policies.')">
                 <div class="space-y-5">
                     <div class="rounded-lg bg-zinc-50 p-4 text-sm dark:bg-white/[0.03]">
                         <p class="font-medium text-zinc-900 dark:text-white">{{ __('In the app registration › Authentication, add a “Web” redirect URI:') }}</p>
@@ -242,7 +242,7 @@ new #[Title('Microsoft 365')] class extends Component {
                     ? 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/'.rawurlencode($client_id)
                     : 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade';
             @endphp
-            <x-admin.card :title="__('API permissions')" :padded="false">
+            <x-admin.card icon="shield-check" :title="__('API permissions')" :padded="false">
                 <x-slot:headerActions>
                     @if ($this->configured)
                         <flux:button size="xs" variant="ghost" icon="arrow-path" wire:click="checkPermissions" wire:loading.attr="disabled" wire:target="checkPermissions">{{ __('Check') }}</flux:button>
@@ -276,7 +276,7 @@ new #[Title('Microsoft 365')] class extends Component {
                 </ul>
             </x-admin.card>
 
-            <x-admin.card :title="__('How to grant them')">
+            <x-admin.card icon="list-bullet" :title="__('How to grant them')">
                 <ol class="space-y-3 text-zinc-600 dark:text-zinc-400">
                     @foreach ([
                         __('Open the app registration in Microsoft Entra, then “API permissions”.'),

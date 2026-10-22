@@ -5,7 +5,7 @@
     </head>
     <body class="min-h-dvh bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
         @php
-            $navItem = 'h-9 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 data-current:bg-white data-current:font-medium data-current:text-zinc-900 data-current:shadow-xs data-current:ring-1 data-current:ring-zinc-200 data-current:[&_svg]:text-brand dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white dark:data-current:bg-white/[0.07] dark:data-current:text-white dark:data-current:ring-white/10';
+            $navItem = 'relative h-9 rounded-lg before:absolute before:inset-y-2 before:start-0 before:w-[3px] before:rounded-full before:bg-brand before:opacity-0 before:transition data-current:before:opacity-100 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 data-current:bg-white data-current:font-medium data-current:text-zinc-900 data-current:shadow-xs data-current:ring-1 data-current:ring-zinc-200 data-current:[&_svg]:text-brand dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white dark:data-current:bg-white/[0.07] dark:data-current:text-white dark:data-current:ring-white/10';
             $groupLabel = 'px-2 pb-1 pt-6 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500';
         @endphp
 
@@ -18,6 +18,19 @@
                 <x-app-logo :href="route('dashboard')" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
+
+            @if (auth()->user()->is_admin)
+                <button
+                    type="button"
+                    x-data
+                    x-on:click="$dispatch('open-command-palette')"
+                    class="group mt-1 flex h-9 w-full items-center gap-2 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm text-zinc-400 shadow-xs transition hover:border-zinc-300 hover:text-zinc-600 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/20 dark:hover:text-zinc-300"
+                >
+                    <flux:icon.magnifying-glass variant="micro" />
+                    <span class="flex-1 text-start">{{ __('Search…') }}</span>
+                    <kbd class="rounded border border-zinc-200 px-1 font-sans text-[10px] text-zinc-400 dark:border-white/10" x-text="/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K'">Ctrl K</kbd>
+                </button>
+            @endif
 
             <flux:sidebar.nav class="gap-0.5 pt-2">
                 @if (auth()->user()->is_admin)
@@ -70,10 +83,17 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
             <x-app-logo class="ms-2" :href="route('dashboard')" wire:navigate />
             <flux:spacer />
+            @if (auth()->user()->is_admin)
+                <flux:button variant="ghost" size="sm" icon="magnifying-glass" x-data x-on:click="$dispatch('open-command-palette')" :aria-label="__('Search')" />
+            @endif
             <x-desktop-user-menu compact />
         </flux:header>
 
         {{ $slot }}
+
+        @if (auth()->user()->is_admin)
+            <x-admin.command-palette />
+        @endif
 
         @persist('toast')
             <flux:toast position="bottom end" />

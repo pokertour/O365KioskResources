@@ -106,11 +106,11 @@ new #[Title('Branding')] class extends Component {
 @endphp
 
 <div>
-    <x-admin.page-header :title="__('Branding')" :description="__('Customise the name, logo and colours. They apply to the administration and to every screen.')" />
+    <x-admin.page-header icon="swatch" :title="__('Branding')" :description="__('Customise the name, logo and colours. They apply to the administration and to every screen.')" />
 
     <form wire:submit="save" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
         <div class="flex flex-col gap-6">
-            <x-admin.card :title="__('Identity')">
+            <x-admin.card icon="identification" :title="__('Identity')">
                 <div class="space-y-6">
                     <flux:input wire:model="site_name" :label="__('Display name')" :placeholder="config('app.name')" :description="__('Shown in the menu and at the top of the screens.')" maxlength="60" />
 
@@ -147,7 +147,7 @@ new #[Title('Branding')] class extends Component {
                 </div>
             </x-admin.card>
 
-            <x-admin.card :title="__('Colours')">
+            <x-admin.card icon="swatch" :title="__('Colours')">
                 <x-slot:headerActions>
                     <flux:button size="sm" variant="ghost" wire:click="resetColors">{{ __('Reset') }}</flux:button>
                 </x-slot:headerActions>
@@ -194,7 +194,7 @@ new #[Title('Branding')] class extends Component {
                 </div>
             </x-admin.card>
 
-            <x-admin.card :title="__('Room screens')">
+            <x-admin.card icon="device-tablet" :title="__('Room screens')">
                 <div class="space-y-6">
                     <div>
                         <flux:label>{{ __('Theme') }}</flux:label>

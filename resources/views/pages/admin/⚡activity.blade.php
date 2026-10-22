@@ -45,12 +45,8 @@ new #[Title('Activity')] class extends Component {
     }
 }; ?>
 
-@php
-    $tz = app(\App\Services\RoomSchedule::class)->timezone();
-@endphp
-
 <div>
-    <x-admin.page-header :title="__('Activity')" :description="__('Everything that happened on the screens and in the administration, kept :days days.', ['days' => \App\Models\ActivityLog::RETENTION_DAYS])" />
+    <x-admin.page-header icon="clock" :title="__('Activity')" :description="__('Everything that happened on the screens and in the administration, kept :days days.', ['days' => \App\Models\ActivityLog::RETENTION_DAYS])" />
 
     <div class="mb-5 grid gap-3 sm:grid-cols-3">
         <flux:select wire:model.live="room" size="sm">
@@ -79,31 +75,14 @@ new #[Title('Activity')] class extends Component {
     </div>
 
     <x-admin.card :padded="false">
-        @forelse ($this->logs as $log)
-            <div wire:key="log-{{ $log->id }}" class="flex items-start gap-3 border-b border-zinc-100 px-5 py-3 last:border-0 dark:border-white/[0.06]">
-                <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-white/5">
-                    <flux:icon :name="$log->icon()" variant="micro" class="text-zinc-500" />
-                </div>
-                <div class="min-w-0 flex-1 text-sm">
-                    <p class="text-zinc-900 dark:text-white">
-                        <span class="font-medium">{{ $log->label() }}</span>
-                        @if ($log->description) <span class="text-zinc-500">· {{ $log->description }}</span> @endif
-                    </p>
-                    <p class="text-xs text-zinc-500">
-                        @if ($log->room)
-                            <a href="{{ route('admin.rooms.show', $log->room) }}" wire:navigate class="font-medium hover:text-zinc-900 dark:hover:text-white">{{ $log->room->name }}</a> ·
-                        @endif
-                        {{ $log->actor === 'screen' ? __('From the screen') : ($log->actor === 'system' ? __('Automatic') : ($log->user?->name ?? __('Administrator'))) }}
-                        @if ($log->ip && $log->actor !== 'system') · <span class="font-mono">{{ $log->ip }}</span> @endif
-                    </p>
-                </div>
-                <time class="shrink-0 text-xs tabular-nums text-zinc-500" datetime="{{ $log->created_at->toIso8601String() }}" title="{{ $log->created_at->diffForHumans() }}">
-                    {{ $log->created_at->setTimezone($tz)->format('d/m H:i') }}
-                </time>
+        @if ($this->logs->isEmpty())
+            <div class="px-5 py-16 text-center">
+                <flux:icon.clock class="mx-auto size-8 text-zinc-300 dark:text-zinc-600" />
+                <p class="mt-3 text-sm text-zinc-500">{{ __('Nothing yet.') }}</p>
             </div>
-        @empty
-            <p class="px-5 py-14 text-center text-sm text-zinc-500">{{ __('Nothing yet.') }}</p>
-        @endforelse
+        @else
+            <x-admin.activity-timeline :logs="$this->logs->getCollection()" show-ip />
+        @endif
     </x-admin.card>
 
     <div class="mt-4">

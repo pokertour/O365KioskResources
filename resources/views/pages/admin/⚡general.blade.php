@@ -74,10 +74,11 @@ new #[Title('General')] class extends Component {
 }; ?>
 
 <div>
-    <x-admin.page-header :title="__('General')" :description="__('Language, time zone and time format used across the administration and the room screens.')" />
+    <x-admin.page-header icon="adjustments-horizontal" :title="__('General')" :description="__('Language, time zone and time format used across the administration and the room screens.')" />
 
-    <form wire:submit="save" class="max-w-3xl space-y-6">
-        <x-admin.card :title="__('Language')" :description="__('Default language of the screens and of the administration. Each administrator can choose their own from their menu.')">
+    <x-admin.settings-layout form="general-settings">
+    <form id="general-settings" wire:submit="save" class="space-y-6">
+        <x-admin.card icon="language" :title="__('Language')" :description="__('Default language of the screens and of the administration. Each administrator can choose their own from their menu.')">
             <div class="grid gap-3 sm:grid-cols-2">
                 @foreach (\App\Models\AppSetting::LOCALES as $code => $label)
                     <label
@@ -92,7 +93,7 @@ new #[Title('General')] class extends Component {
             </div>
         </x-admin.card>
 
-        <x-admin.card :title="__('Date and time')">
+        <x-admin.card icon="globe-europe-africa" :title="__('Date and time')">
             <div class="space-y-6">
                 <flux:select wire:model="timezone" :label="__('Time zone')" :description="__('Used to display the agendas and create bookings.')">
                     @foreach ($this->timezones as $region => $zones)
@@ -132,4 +133,5 @@ new #[Title('General')] class extends Component {
             <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
         </div>
     </form>
+    </x-admin.settings-layout>
 </div>

@@ -26,6 +26,7 @@ class RoomStats
      *     rooms: list<array{room: Room, meetings: int, hours: float, occupancy: float, avg_minutes: int, app_bookings: int, ended_early: int, extended: int, issues: int, error: ?string}>,
      *     heatmap: array<int, array<int, float>>,
      *     hours: list<int>,
+     *     daily: list<array{date: CarbonImmutable, occupancy: float}>,
      *     totals: array{occupancy: float, meetings: int, hours: float, app_bookings: int, issues: int},
      *     from: CarbonImmutable,
      *     to: CarbonImmutable,
@@ -44,12 +45,14 @@ class RoomStats
         // Working minutes available per room over the period (weekdays only, up to now).
         $available = 0;
         $slotsPerCell = []; // [weekday][hour] => number of hour-slots in the period
+        $availablePerDay = []; // [Y-m-d] => working minutes of that day
         for ($day = $from; $day->lessThan($to); $day = $day->addDay()) {
             if ($day->isWeekend()) {
                 continue;
             }
             $dayEnd = $day->isSameDay($to) ? min($endMin, $to->hour * 60 + $to->minute) : $endMin;
             $available += max(0, $dayEnd - $startMin);
+            $availablePerDay[$day->toDateString()] = max(0, $dayEnd - $startMin);
             foreach ($hours as $h) {
                 if ($h * 60 < $dayEnd) {
                     $slotsPerCell[$day->dayOfWeekIso][$h] = ($slotsPerCell[$day->dayOfWeekIso][$h] ?? 0) + 1;
@@ -58,6 +61,7 @@ class RoomStats
         }
 
         $busyPerCell = [];
+        $busyPerDay = []; // [Y-m-d] => occupied minutes, all rooms
         $rows = [];
         $rooms = Room::query()->orderBy('name')->get();
 
@@ -104,6 +108,7 @@ class RoomStats
                 $weekday = CarbonImmutable::parse($date, $tz)->dayOfWeekIso;
                 foreach ($this->merge($intervals) as [$a, $b]) {
                     $occupied += $b - $a;
+                    $busyPerDay[$date] = ($busyPerDay[$date] ?? 0) + $b - $a;
                     foreach ($hours as $h) {
                         $overlap = min($b, ($h + 1) * 60) - max($a, $h * 60);
                         if ($overlap > 0) {
@@ -148,10 +153,19 @@ class RoomStats
 
         $ok = collect($rows)->whereNull('error');
 
+        $daily = [];
+        foreach ($availablePerDay as $date => $minutes) {
+            $daily[] = [
+                'date' => CarbonImmutable::parse($date, $tz),
+                'occupancy' => $minutes > 0 ? round(($busyPerDay[$date] ?? 0) / ($minutes * $roomCount) * 100, 1) : 0.0,
+            ];
+        }
+
         return [
             'rooms' => $rows,
             'heatmap' => $heatmap,
             'hours' => $hours,
+            'daily' => $daily,
             'totals' => [
                 'occupancy' => $ok->count() ? round($ok->avg('occupancy'), 1) : 0.0,
                 'meetings' => (int) $ok->sum('meetings'),

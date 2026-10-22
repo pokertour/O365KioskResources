@@ -71,10 +71,11 @@ new #[Title('Notifications')] class extends Component {
 }; ?>
 
 <div>
-    <x-admin.page-header :title="__('Notifications')" :description="__('Who is warned, and how, when a screen goes offline or someone reports a problem.')" />
+    <x-admin.page-header icon="bell" :title="__('Notifications')" :description="__('Who is warned, and how, when a screen goes offline or someone reports a problem.')" />
 
-    <form wire:submit="save" class="max-w-3xl space-y-6">
-        <x-admin.card :title="__('Screen supervision')">
+    <x-admin.settings-layout form="notification-settings">
+    <form id="notification-settings" wire:submit="save" class="space-y-6">
+        <x-admin.card icon="signal" :title="__('Screen supervision')">
             <flux:radio.group wire:model="offline_alert_minutes" :label="__('Alert when a screen stops reporting for')" variant="segmented" class="sm:max-w-lg">
                 @foreach (\App\Models\AppSetting::OFFLINE_ALERT_OPTIONS as $minutes)
                     <flux:radio :value="$minutes" :label="$minutes === 0 ? __('Never') : fmt_duration($minutes)" />
@@ -83,7 +84,7 @@ new #[Title('Notifications')] class extends Component {
             <p class="mt-3 text-xs text-zinc-500">{!! __('Requires the Laravel scheduler on the server: :cmd', ['cmd' => '<code class="rounded bg-zinc-100 px-1 py-0.5 dark:bg-white/10">* * * * * php artisan schedule:run</code>']) !!}</p>
         </x-admin.card>
 
-        <x-admin.card :title="__('Channels')">
+        <x-admin.card icon="paper-airplane" :title="__('Channels')">
             <div class="space-y-6">
                 <flux:switch wire:model="notify_admins_by_email" :label="__('E-mail the administrators')" :description="__('Every administrator with a verified e-mail address receives the alerts.')" />
 
@@ -109,4 +110,5 @@ new #[Title('Notifications')] class extends Component {
             <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
         </div>
     </form>
+    </x-admin.settings-layout>
 </div>

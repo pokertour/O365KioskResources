@@ -121,10 +121,11 @@ new #[Title('Screens')] class extends Component {
 }; ?>
 
 <div>
-    <x-admin.page-header :title="__('Screens')" :description="__('Behaviour of the screens installed in front of the rooms. Applies to every room.')" />
+    <x-admin.page-header icon="tv" :title="__('Screens')" :description="__('Behaviour of the screens installed in front of the rooms. Applies to every room.')" />
 
-    <form wire:submit="save" class="max-w-3xl space-y-6">
-        <x-admin.card :title="__('Display')">
+    <x-admin.settings-layout form="screen-settings">
+    <form id="screen-settings" wire:submit="save" class="space-y-6">
+        <x-admin.card icon="computer-desktop" :title="__('Display')">
             <div class="space-y-6">
                 <flux:radio.group wire:model="kiosk_refresh_seconds" :label="__('Refresh interval')" :description="__('How often the screens reload the room agenda.')" variant="segmented" class="sm:max-w-md">
                     @foreach (\App\Models\AppSetting::REFRESH_OPTIONS as $seconds)
@@ -152,7 +153,7 @@ new #[Title('Screens')] class extends Component {
             </div>
         </x-admin.card>
 
-        <x-admin.card :title="__('Agenda')" :description="__('Free slots can be tapped to book them.')">
+        <x-admin.card icon="calendar-days" :title="__('Agenda')" :description="__('Free slots can be tapped to book them.')">
             <div class="space-y-6">
                 <div>
                     <flux:label>{{ __('Agenda layout') }}</flux:label>
@@ -200,7 +201,7 @@ new #[Title('Screens')] class extends Component {
             </div>
         </x-admin.card>
 
-        <x-admin.card :title="__('Booking from the screen')" :description="__('Rooms where booking is enabled offer these quick durations when they are free.')">
+        <x-admin.card icon="cursor-arrow-rays" :title="__('Booking from the screen')" :description="__('Rooms where booking is enabled offer these quick durations when they are free.')">
             <div class="space-y-6">
                 <div>
                     <flux:label>{{ __('Quick booking buttons') }}</flux:label>
@@ -233,7 +234,7 @@ new #[Title('Screens')] class extends Component {
             </div>
         </x-admin.card>
 
-        <x-admin.card :title="__('Night mode')" :description="__('Outside working hours the screens dim and only show the clock and the room status. A touch wakes them up for a minute.')">
+        <x-admin.card icon="moon" :title="__('Night mode')" :description="__('Outside working hours the screens dim and only show the clock and the room status. A touch wakes them up for a minute.')">
             <div class="space-y-6">
                 <flux:switch wire:model="night_mode" :label="__('Enable night mode')" />
                 <div class="grid max-w-sm grid-cols-2 gap-4" x-show="$wire.night_mode" x-cloak>
@@ -247,4 +248,5 @@ new #[Title('Screens')] class extends Component {
             <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
         </div>
     </form>
+    </x-admin.settings-layout>
 </div>

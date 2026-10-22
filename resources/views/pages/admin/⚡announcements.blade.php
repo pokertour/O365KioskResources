@@ -127,7 +127,7 @@ new #[Title('Announcements')] class extends Component {
 @endphp
 
 <div>
-    <x-admin.page-header :title="__('Announcements')" :description="__('Messages shown in a banner on the screens: fire drill, closed room, works…')">
+    <x-admin.page-header icon="megaphone" :title="__('Announcements')" :description="__('Messages shown in a banner on the screens: fire drill, closed room, works…')">
         <x-slot:actions>
             <flux:button variant="primary" icon="plus" wire:click="create">{{ __('New announcement') }}</flux:button>
         </x-slot:actions>

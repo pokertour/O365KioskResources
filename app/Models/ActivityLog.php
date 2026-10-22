@@ -74,13 +74,39 @@ class ActivityLog extends Model
 
     public function icon(): string
     {
-        return match (strtok($this->action, '.')) {
-            'booking', 'meeting' => 'calendar-days',
-            'screen' => 'tv',
-            'issue' => 'exclamation-triangle',
-            'announcement' => 'megaphone',
-            'user', 'auth' => 'user-circle',
-            default => 'cog-6-tooth',
+        return match ($this->action) {
+            'meeting.ended' => 'stop-circle',
+            'meeting.extended' => 'plus-circle',
+            'booking.cancelled' => 'x-circle',
+            'issue.resolved' => 'check-circle',
+            'screen.offline' => 'signal-slash',
+            'screen.online' => 'signal',
+            'screen.link_rotated' => 'arrow-path',
+            'auth.sso' => 'key',
+            default => match (strtok($this->action, '.')) {
+                'booking', 'meeting' => 'calendar-days',
+                'screen' => 'tv',
+                'issue' => 'exclamation-triangle',
+                'announcement' => 'megaphone',
+                'room' => 'building-office-2',
+                'user', 'auth' => 'user-circle',
+                default => 'cog-6-tooth',
+            },
+        };
+    }
+
+    /**
+     * Colour family of the event in the timeline: brand, available, busy, soon, warning or neutral.
+     */
+    public function tone(): string
+    {
+        return match (true) {
+            in_array($this->action, ['booking.created', 'booking.updated'], true) => 'brand',
+            in_array($this->action, ['meeting.ended', 'screen.online', 'screen.paired', 'issue.resolved', 'room.created', 'user.created'], true) => 'available',
+            $this->action === 'meeting.extended' => 'soon',
+            in_array($this->action, ['screen.offline', 'issue.reported'], true) => 'warning',
+            $this->action === 'booking.cancelled' || str_ends_with($this->action, '.deleted') || $this->action === 'screen.removed' => 'busy',
+            default => 'neutral',
         };
     }
 
