@@ -36,13 +36,50 @@ npm run build                # ou : npm run dev
 php artisan serve
 ```
 
-### Stockage public (logos d’identité)
+### Logo
 
-Les logos admin sont stockés sur le disque `public`. Après déploiement ou en local :
+Le logo est stocké sur le disque privé (`storage/app/private/branding`) et servi par la route `/branding/logo` avec une CSP de sandbox (les SVG ne peuvent pas exécuter de script). Aucun `storage:link` n’est nécessaire. La migration du 22/10/2026 déplace automatiquement un logo existant depuis le disque `public`.
 
-```bash
-php artisan storage:link
+### Production : sécurité recommandée
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+SESSION_ENCRYPT=true
+SESSION_SECURE_COOKIE=true
 ```
+
+L’application ajoute ses en-têtes de sécurité (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, HSTS en HTTPS). Les pages d’écran sont servies en `no-referrer`, `no-store` et `noindex` car leur URL contient le jeton d’accès.
+
+### Paramètres & langues
+
+Menu **Paramètres** de l’administration :
+
+| Page | Contenu |
+|------|---------|
+| Général | Langue par défaut (FR/EN), fuseau horaire, format d’heure 24 h / 12 h |
+| Écrans | Fréquence d’actualisation, boutons de réservation rapide, durée maximale, affichage de l’organisateur, message de bas d’écran |
+| Apparence | Nom, logo, couleurs, thème des écrans |
+| Microsoft 365 | Identifiants Graph (confirmation du mot de passe) |
+| Administrateurs | Comptes ayant accès à l’administration |
+
+Chaque administrateur peut choisir sa langue depuis son menu ; les visiteurs (page de connexion) via le sélecteur FR/EN. Les traductions sont dans `lang/fr.json` et `lang/fr/*.php` (clés en anglais).
+
+### Planificateur (alertes et nettoyage)
+
+La supervision des écrans (alerte quand un écran ne répond plus) et le nettoyage du journal d’activité (180 jours) reposent sur le planificateur Laravel :
+
+```cron
+* * * * * cd /chemin/vers/app && php artisan schedule:run >> /dev/null 2>&1
+```
+
+En local : `php artisan schedule:work`. Les alertes partent par e-mail (config `MAIL_*`) et/ou vers un canal Teams (Paramètres › Notifications).
+
+### Installer un écran
+
+Sur la tablette, ouvrez `/kiosk` : un code à 6 chiffres s’affiche. Dans l’admin, ouvrez la salle › onglet **Écran** › **Saisir un code**. L’écran bascule seul sur la salle. Le lien direct reste disponible dans le même onglet.
+
+Le QR code affiché sur les écrans ouvre une vue téléphone signée (valable 30 min) : les téléphones doivent pouvoir joindre le serveur, et `APP_URL` / les proxys de confiance doivent refléter l’adresse publique.
 
 ### Compte administrateur (seed)
 
@@ -62,7 +99,7 @@ Le seeder force `is_admin = true` et l’e-mail vérifié pour ce compte.
 
 La configuration Microsoft Graph se fait dans l’interface admin :
 
-- **Administration** → **Logo & titre** → section **Microsoft 365 (Azure)**
+- **Configuration** → **Microsoft 365** (confirmation du mot de passe demandée)
 - champs requis : `Tenant ID`, `Client ID`, `Client secret`
 
 Le secret est stocké chiffré en base de données. Sans ces valeurs, l’UI admin indique que Microsoft 365 n’est pas configuré ; le reste de l’app peut continuer à fonctionner partiellement.
@@ -89,17 +126,23 @@ Le secret est stocké chiffré en base de données. Sans ces valeurs, l’UI adm
 
    Le code appelle des URL du type `https://graph.microsoft.com/v1.0/users/{adresseSMTP}/calendar/...` où `{adresseSMTP}` est l’**e-mail de la ressource salle** (boîte aux lettres de salle) saisi dans l’admin.
 
+   - *(facultatif)* **`Place.Read.All`** — pour le bouton **Importer depuis Microsoft 365** de la page Salles.
+
 3. **Grant admin consent for {votre organisation}** sur les permissions ajoutées (obligatoire pour les droits *Application*).
 
 Sans consentement administrateur, les appels token « client credentials » échoueront (403 ou erreurs d’authentification selon les cas).
 
 ### 4. Enregistrer les identifiants dans l’application
 
-1. Ouvrez **Administration** → **Logo & titre**.
-2. Renseignez `Tenant ID`, `Client ID`, `Client secret`.
-3. Enregistrez.
+1. Ouvrez **Configuration** → **Microsoft 365**.
+2. Renseignez l’ID du locataire, l’ID d’application et le secret client.
+3. Cliquez sur **Enregistrer et tester** : un jeton est demandé immédiatement pour valider la configuration.
 
 Le jeton d’accès Graph est mis en cache côté application (environ 50 minutes). La sauvegarde de cette configuration invalide automatiquement le cache token.
+
+### Connexion des administrateurs avec Microsoft (SSO)
+
+Dans l’inscription d’application › **Authentication**, ajoutez une plateforme **Web** avec l’URI de redirection affichée dans **Paramètres › Microsoft 365** (`https://votre-domaine/auth/microsoft/callback`). La permission déléguée `User.Read` (présente par défaut) suffit. Activez ensuite « Se connecter avec Microsoft » : seuls les comptes existants (même adresse e-mail) peuvent se connecter. Les mots de passe ne peuvent être désactivés qu’après une première connexion Microsoft réussie.
 
 ### 5. Salles côté Microsoft 365
 
@@ -112,7 +155,7 @@ Pour chaque **salle** créée dans l’admin, renseignez l’**e-mail ressource 
 
 | Symptôme | Piste |
 |----------|--------|
-| « Microsoft 365 n’est pas configuré » | Vérifier les champs Microsoft 365 (Azure) dans **Administration > Logo & titre**. |
+| « Microsoft 365 n’est pas configuré » | Vérifier la page **Configuration > Microsoft 365**. |
 | 401 / invalid_client | Mauvais `Client ID` / secret ou secret expiré. |
 | 403 Insufficient privileges | Permission Graph manquante ou **admin consent** non accordé. |
 | 404 sur l’utilisateur / calendrier | L’e-mail ressource n’existe pas dans le tenant ou n’est pas une boîte valide côté Graph. |
