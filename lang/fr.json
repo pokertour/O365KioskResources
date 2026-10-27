@@ -880,5 +880,16 @@
     "Wayfinding display deleted": "Panneau d’orientation supprimé",
     "Wayfinding display link regenerated": "Lien du panneau d’orientation régénéré",
     "Wayfinding displays": "Panneaux d’orientation",
-    "When there are more rooms, the display turns the pages every :seconds seconds.": "S’il y a plus de salles, le panneau change de page toutes les :seconds secondes."
+    "When there are more rooms, the display turns the pages every :seconds seconds.": "S’il y a plus de salles, le panneau change de page toutes les :seconds secondes.",
+    "Logo": "Logo",
+    "One logo for light backgrounds and one for dark backgrounds, e.g. a white version. With a single logo, it is used everywhere.": "Un logo pour les fonds clairs et un pour les fonds sombres, par exemple une version blanche. Avec un seul logo, il est utilisé partout.",
+    "On a light background": "Sur fond clair",
+    "On a dark background": "Sur fond sombre",
+    "Custom logo": "Logo personnalisé",
+    "Uses the other logo": "Utilise l’autre logo",
+    "Default icon": "Icône par défaut",
+    "Choose": "Choisir",
+    "Remove the logo for dark backgrounds?": "Supprimer le logo pour fond sombre ?",
+    "Remove the logo for light backgrounds?": "Supprimer le logo pour fond clair ?",
+    "The other logo will be used instead.": "L’autre logo sera utilisé à la place."
 }

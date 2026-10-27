@@ -6,8 +6,10 @@ use App\Models\BrandingSetting;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Once;
 use Livewire\Livewire;
 
 test('admin middleware is re-applied on livewire update requests', function () {
@@ -137,3 +139,70 @@ test('error pages render even when the database is unavailable', function (int $
 
     expect($html)->toContain((string) $status);
 })->with([403, 404, 419, 429, 500, 503]);
+
+test('a second logo can be set for dark backgrounds', function () {
+    Storage::fake('local');
+
+    Livewire::actingAs(User::factory()->create())
+        ->test('pages::admin.branding')
+        ->set('logo', UploadedFile::fake()->image('light.png'))
+        ->set('logo_dark', UploadedFile::fake()->image('dark.png'))
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $branding = BrandingSetting::current();
+    expect($branding->logoUrl('light'))->not->toBe($branding->logoUrl('dark'))
+        ->and($branding->logoUrlFor('dark'))->toBe($branding->logoUrl('dark'));
+
+    $this->get($branding->logoUrl('dark'))->assertOk()->assertHeader('Content-Type', 'image/png');
+
+    // Each theme gets its own image: the dark one only shows under the `dark` class.
+    Once::flush(); // the shared $branding is memoised per request
+    $html = Blade::render('<x-brand-mark />');
+    expect($html)->toContain($branding->logoUrl('light'))
+        ->toContain($branding->logoUrl('dark'))
+        ->toContain('dark:hidden')
+        ->toContain('dark:block');
+});
+
+test('a single logo is used on both backgrounds', function () {
+    Storage::fake('local');
+
+    Livewire::actingAs(User::factory()->create())
+        ->test('pages::admin.branding')
+        ->set('logo_dark', UploadedFile::fake()->image('white.png'))
+        ->call('save');
+
+    $branding = BrandingSetting::current();
+    expect($branding->hasLogo('light'))->toBeFalse()
+        ->and($branding->logoUrlFor('light'))->toBe($branding->logoUrl('dark'));
+
+    Once::flush();
+    expect(Blade::render('<x-brand-mark />'))->toContain($branding->logoUrl('dark'))->not->toContain('dark:hidden');
+});
+
+test('removing the dark logo keeps the light one', function () {
+    Storage::fake('local');
+    $admin = User::factory()->create();
+
+    Livewire::actingAs($admin)
+        ->test('pages::admin.branding')
+        ->set('logo', UploadedFile::fake()->image('light.png'))
+        ->set('logo_dark', UploadedFile::fake()->image('dark.png'))
+        ->call('save');
+    $darkPath = BrandingSetting::current()->logo_dark_path;
+
+    Livewire::actingAs($admin)
+        ->test('pages::admin.branding')
+        ->call('confirmRemoveLogo', 'dark')
+        ->call('removeLogo');
+
+    $branding = BrandingSetting::current();
+    Storage::disk('local')->assertMissing($darkPath);
+    expect($branding->hasLogo('light'))->toBeTrue()
+        ->and($branding->hasLogo('dark'))->toBeFalse()
+        ->and($branding->logoUrlFor('dark'))->toBe($branding->logoUrl('light'));
+
+    $this->get('/branding/logo/dark')->assertNotFound();
+    $this->get('/branding/logo/other')->assertNotFound();
+});

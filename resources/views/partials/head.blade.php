@@ -8,7 +8,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 
 @php($brandName = $branding?->displayName() ?? config('app.name', 'Laravel'))
-@php($brandLogoUrl = $branding?->logoUrl())
+@php($brandLogoUrl = $branding?->logoUrlFor('light'))
 
 <title>{{ filled($title ?? null) ? __($title).' · '.$brandName : $brandName }}</title>
 

@@ -19,11 +19,15 @@ class BrandingSetting extends Model
 
     public const THEMES = ['dark', 'light'];
 
+    /** Logo variants: for light backgrounds (logo_path) and for dark backgrounds (logo_dark_path). */
+    public const LOGO_VARIANTS = ['light', 'dark'];
+
     private const ICON_PANEL_PATH = 'M18 14h7a5 5 0 0 1 5 5v26a5 5 0 0 1-5 5h-7a5 5 0 0 1-5-5V19a5 5 0 0 1 5-5Zm3.5 24a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z';
 
     protected $fillable = [
         'site_name',
         'logo_path',
+        'logo_dark_path',
         'primary_color',
         'available_color',
         'busy_color',
@@ -46,18 +50,39 @@ class BrandingSetting extends Model
         return $name !== '' ? $name : (string) config('app.name', 'Laravel');
     }
 
-    public function hasLogo(): bool
+    /**
+     * Stored path of a logo variant, or null when that variant was not uploaded.
+     */
+    public function logoPath(string $variant = 'light'): ?string
     {
-        return filled($this->logo_path) && Storage::disk(self::LOGO_DISK)->exists($this->logo_path);
+        $path = $variant === 'dark' ? $this->logo_dark_path : $this->logo_path;
+
+        return filled($path) && Storage::disk(self::LOGO_DISK)->exists($path) ? $path : null;
     }
 
-    public function logoUrl(): ?string
+    public function hasLogo(string $variant = 'light'): bool
     {
-        if (! $this->hasLogo()) {
-            return null;
-        }
+        return $this->logoPath($variant) !== null;
+    }
 
-        return route('branding.logo', ['v' => substr(md5((string) $this->logo_path), 0, 10)]);
+    /**
+     * URL of exactly this variant (null when it was not uploaded).
+     */
+    public function logoUrl(string $variant = 'light'): ?string
+    {
+        $path = $this->logoPath($variant);
+
+        return $path === null ? null : route('branding.logo', ['variant' => $variant, 'v' => substr(md5($path), 0, 10)]);
+    }
+
+    /**
+     * Logo to show on a light or dark background: that variant, else the other one.
+     */
+    public function logoUrlFor(string $theme): ?string
+    {
+        $other = $theme === 'dark' ? 'light' : 'dark';
+
+        return $this->logoUrl($theme === 'dark' ? 'dark' : 'light') ?? $this->logoUrl($other);
     }
 
     /**
@@ -76,12 +101,13 @@ class BrandingSetting extends Model
         return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 
-    public function deleteStoredLogo(): void
+    public function deleteStoredLogo(string $variant = 'light'): void
     {
-        if ($this->hasLogo()) {
-            Storage::disk(self::LOGO_DISK)->delete($this->logo_path);
+        $column = $variant === 'dark' ? 'logo_dark_path' : 'logo_path';
+        if ($this->hasLogo($variant)) {
+            Storage::disk(self::LOGO_DISK)->delete($this->{$column});
         }
-        $this->logo_path = null;
+        $this->{$column} = null;
     }
 
     /**
@@ -89,7 +115,7 @@ class BrandingSetting extends Model
      */
     public function version(): string
     {
-        return substr(md5(implode('|', [$this->id, $this->updated_at?->getTimestamp(), $this->logo_path])), 0, 12);
+        return substr(md5(implode('|', [$this->id, $this->updated_at?->getTimestamp(), $this->logo_path, $this->logo_dark_path])), 0, 12);
     }
 
     public function kioskTheme(): string

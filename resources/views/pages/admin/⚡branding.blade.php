@@ -14,7 +14,14 @@ new #[Title('Branding')] class extends Component {
 
     public string $site_name = '';
 
+    /** Logo for light backgrounds. */
     public $logo = null;
+
+    /** Logo for dark backgrounds (optional: the light one is used when missing). */
+    public $logo_dark = null;
+
+    /** Variant whose removal is being confirmed. */
+    public string $removing = 'light';
 
     public string $primary_color = '';
 
@@ -45,6 +52,7 @@ new #[Title('Branding')] class extends Component {
             'site_name' => ['nullable', 'string', 'max:60'],
             // SVG is accepted: the file is served from a private disk with a sandboxing CSP.
             'logo' => ['nullable', 'file', 'max:2048', 'mimes:png,jpg,jpeg,webp,svg', 'mimetypes:image/png,image/jpeg,image/webp,image/svg+xml,image/svg'],
+            'logo_dark' => ['nullable', 'file', 'max:2048', 'mimes:png,jpg,jpeg,webp,svg', 'mimetypes:image/png,image/jpeg,image/webp,image/svg+xml,image/svg'],
             'primary_color' => $hex,
             'available_color' => $hex,
             'busy_color' => $hex,
@@ -55,6 +63,7 @@ new #[Title('Branding')] class extends Component {
         ], [
             'site_name' => __('display name'),
             'logo' => __('logo'),
+            'logo_dark' => __('logo'),
         ]);
 
         $b = BrandingSetting::current();
@@ -68,12 +77,17 @@ new #[Title('Branding')] class extends Component {
         ]);
 
         if ($this->logo) {
-            $b->deleteStoredLogo();
+            $b->deleteStoredLogo('light');
             $b->logo_path = $this->logo->store('branding', BrandingSetting::LOGO_DISK);
+        }
+        if ($this->logo_dark) {
+            $b->deleteStoredLogo('dark');
+            $b->logo_dark_path = $this->logo_dark->store('branding', BrandingSetting::LOGO_DISK);
         }
 
         $b->save();
         $this->logo = null;
+        $this->logo_dark = null;
 
         \App\Models\ActivityLog::record('settings.updated', null, __('Branding'));
         Flux::toast(variant: 'success', text: __('Branding saved.'));
@@ -89,10 +103,16 @@ new #[Title('Branding')] class extends Component {
         $this->soon_color = BrandingSetting::DEFAULTS['soon_color'];
     }
 
+    public function confirmRemoveLogo(string $variant): void
+    {
+        $this->removing = in_array($variant, BrandingSetting::LOGO_VARIANTS, true) ? $variant : 'light';
+        $this->modal('confirm-remove-logo')->show();
+    }
+
     public function removeLogo(): void
     {
         $b = BrandingSetting::current();
-        $b->deleteStoredLogo();
+        $b->deleteStoredLogo($this->removing);
         $b->save();
         $this->modal('confirm-remove-logo')->close();
 
@@ -102,7 +122,11 @@ new #[Title('Branding')] class extends Component {
 }; ?>
 
 @php
-    $logoPreview = $logo && ! str_contains((string) $logo->getMimeType(), 'svg') ? $logo->temporaryUrl() : $branding->logoUrl();
+    // Livewire cannot preview an SVG before it is saved: the stored logo stays shown until then.
+    $preview = fn ($upload, string $variant) => $upload && ! str_contains((string) $upload->getMimeType(), 'svg') ? $upload->temporaryUrl() : $branding->logoUrl($variant);
+    $logoPreviews = ['light' => $preview($logo, 'light'), 'dark' => $preview($logo_dark, 'dark')];
+    // What the screens will show on each background (a missing variant falls back to the other).
+    $logoFor = ['light' => $logoPreviews['light'] ?? $logoPreviews['dark'], 'dark' => $logoPreviews['dark'] ?? $logoPreviews['light']];
 @endphp
 
 <div>
@@ -115,34 +139,61 @@ new #[Title('Branding')] class extends Component {
                     <flux:input wire:model="site_name" :label="__('Display name')" :placeholder="config('app.name')" :description="__('Shown in the menu and at the top of the screens.')" maxlength="60" />
 
                     <div>
-                        <flux:label>Logo</flux:label>
-                        <div class="mt-2 flex items-center gap-4">
-                            <div class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 p-1.5 dark:border-white/10 dark:bg-white/5">
-                                @if ($logoPreview)
-                                    <img src="{{ $logoPreview }}" alt="" class="max-h-full max-w-full object-contain" />
-                                @else
-                                    <flux:icon.photo class="size-6 text-zinc-300 dark:text-zinc-600" />
-                                @endif
-                            </div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <label class="inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 shadow-xs transition hover:bg-zinc-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
-                                    <flux:icon.arrow-up-tray variant="micro" />
-                                    {{ $logoPreview ? __('Replace') : __('Choose a file') }}
-                                    <input type="file" wire:model="logo" accept=".png,.jpg,.jpeg,.webp,.svg" class="sr-only" />
-                                </label>
-                                @if ($branding->logo_path && ! $logo)
-                                    <flux:modal.trigger name="confirm-remove-logo">
-                                        <flux:button size="sm" variant="ghost">{{ __('Remove') }}</flux:button>
-                                    </flux:modal.trigger>
-                                @endif
-                                <span wire:loading wire:target="logo" class="text-xs text-zinc-500">{{ __('Uploading…') }}</span>
-                                @if ($logo)
-                                    <span class="text-xs text-zinc-500">{{ __(':file — save to apply', ['file' => $logo->getClientOriginalName()]) }}</span>
-                                @endif
-                            </div>
+                        <flux:label>{{ __('Logo') }}</flux:label>
+                        <flux:description class="mt-1">{{ __('One logo for light backgrounds and one for dark backgrounds, e.g. a white version. With a single logo, it is used everywhere.') }}</flux:description>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                            @foreach ([
+                                'light' => ['logo', __('On a light background'), 'bg-white ring-zinc-200', 'text-zinc-300'],
+                                'dark' => ['logo_dark', __('On a dark background'), 'bg-zinc-950 ring-white/10', 'text-zinc-700'],
+                            ] as $variant => [$field, $label, $surface, $placeholder])
+                                @php
+                                    $upload = $this->{$field};
+                                    $current = $logoPreviews[$variant];
+                                    $fallback = $current ? null : $logoFor[$variant];
+                                @endphp
+                                <div wire:key="logo-{{ $variant }}" class="rounded-xl border border-zinc-200 p-3 dark:border-white/10">
+                                    <div class="flex h-24 items-center justify-center rounded-lg p-3 ring-1 ring-inset {{ $surface }}">
+                                        @if ($current)
+                                            <img src="{{ $current }}" alt="" class="max-h-full max-w-full object-contain" />
+                                        @elseif ($fallback)
+                                            {{-- Shows the other logo, dimmed: that is what this background gets today. --}}
+                                            <img src="{{ $fallback }}" alt="" class="max-h-full max-w-full object-contain opacity-40" />
+                                        @else
+                                            <flux:icon.photo class="size-7 {{ $placeholder }}" />
+                                        @endif
+                                    </div>
+                                    <div class="mt-3 flex items-center justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <p class="truncate text-sm font-medium text-zinc-900 dark:text-white">{{ $label }}</p>
+                                            <p class="truncate text-xs text-zinc-500">
+                                                @if ($upload)
+                                                    {{ __(':file — save to apply', ['file' => $upload->getClientOriginalName()]) }}
+                                                @elseif ($current)
+                                                    {{ __('Custom logo') }}
+                                                @elseif ($fallback)
+                                                    {{ __('Uses the other logo') }}
+                                                @else
+                                                    {{ __('Default icon') }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <div class="flex shrink-0 items-center gap-1">
+                                            <label class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm font-medium text-zinc-800 shadow-xs transition hover:bg-zinc-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
+                                                <flux:icon.arrow-up-tray variant="micro" />
+                                                {{ $current ? __('Replace') : __('Choose') }}
+                                                <input type="file" wire:model="{{ $field }}" accept=".png,.jpg,.jpeg,.webp,.svg" class="sr-only" />
+                                            </label>
+                                            @if ($branding->hasLogo($variant) && ! $upload)
+                                                <flux:button size="sm" variant="ghost" icon="trash" wire:click="confirmRemoveLogo('{{ $variant }}')" :aria-label="__('Remove')" />
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <span wire:loading wire:target="{{ $field }}" class="mt-1 block text-xs text-zinc-500">{{ __('Uploading…') }}</span>
+                                    <flux:error :name="$field" />
+                                </div>
+                            @endforeach
                         </div>
                         <flux:description class="mt-2">{{ __('PNG, JPG, WebP or SVG, 2 MB max. A logo on a transparent background looks best on the screens.') }}</flux:description>
-                        <flux:error name="logo" />
                     </div>
                 </div>
             </x-admin.card>
@@ -243,8 +294,9 @@ new #[Title('Branding')] class extends Component {
                 >
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            @if ($logoPreview)
-                                <img src="{{ $logoPreview }}" alt="" class="size-5 object-contain" />
+                            @if ($logoFor['light'])
+                                <img src="{{ $logoFor['light'] }}" alt="" class="size-5 object-contain" x-show="$wire.kiosk_theme === 'light'" />
+                                <img src="{{ $logoFor['dark'] }}" alt="" class="size-5 object-contain" x-show="$wire.kiosk_theme === 'dark'" />
                             @else
                                 <span class="flex size-5 items-center justify-center rounded" x-bind:style="{ backgroundColor: $wire.primary_color }"></span>
                             @endif
@@ -284,8 +336,8 @@ new #[Title('Branding')] class extends Component {
     </form>
 
     <flux:modal name="confirm-remove-logo" class="w-full max-w-md">
-        <flux:heading size="lg">{{ __('Remove the logo?') }}</flux:heading>
-        <flux:text class="mt-2">{{ __('The default icon will be used instead.') }}</flux:text>
+        <flux:heading size="lg">{{ $removing === 'dark' ? __('Remove the logo for dark backgrounds?') : __('Remove the logo for light backgrounds?') }}</flux:heading>
+        <flux:text class="mt-2">{{ $branding->hasLogo($removing === 'dark' ? 'light' : 'dark') ? __('The other logo will be used instead.') : __('The default icon will be used instead.') }}</flux:text>
         <div class="mt-6 flex justify-end gap-2">
             <flux:modal.close>
                 <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
